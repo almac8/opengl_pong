@@ -1,0 +1,9 @@
+[package]
+name = "opengl_pong"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gl = "0.14.0"
+image = "0.25.6"
+sdl2 = "0.37.0"
