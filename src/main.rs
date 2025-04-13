@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::{ffi::CString, path::Path};
 use sdl2::event::Event;
 
 fn main() -> Result<(), String> {
@@ -25,10 +25,10 @@ fn main() -> Result<(), String> {
   let mut is_running = true;
 
   let vertices: Vec<f32> = vec![
-    -0.5, -0.5,
-     0.5, -0.5,
-     0.5,  0.5,
-    -0.5,  0.5
+    -0.5, -0.5, 0.0, 0.0,
+     0.5, -0.5, 1.0, 0.0,
+     0.5,  0.5, 1.0, 1.0,
+    -0.5,  0.5, 0.0, 1.0
   ];
 
   let mut vertex_array_buffer: gl::types::GLuint = 0;
@@ -79,8 +79,18 @@ fn main() -> Result<(), String> {
       2,
       gl::FLOAT,
       gl::FALSE,
-      (2 * std::mem::size_of::<f32>()) as gl::types::GLint,
+      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
       std::ptr::null()
+    );
+
+    gl::EnableVertexAttribArray(1);
+    gl::VertexAttribPointer(
+      1,
+      2,
+      gl::FLOAT,
+      gl::FALSE,
+      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
+      (2 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
     );
 
     gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -121,10 +131,35 @@ fn main() -> Result<(), String> {
     gl::DeleteShader(fragment_shader);
   }
 
+  let ball_image = image::open(Path::new("res/ball.png")).map_err(|error| error.to_string())?;
+
+  let mut ball_texture: gl::types::GLuint = 0;
+  unsafe {
+    gl::GenTextures(1, &mut ball_texture);
+    gl::BindTexture(gl::TEXTURE_2D, ball_texture);
+
+    gl::TexImage2D(
+      gl::TEXTURE_2D,
+      0,
+      gl::RGBA as gl::types::GLint,
+      ball_image.width() as gl::types::GLint,
+      ball_image.height() as gl::types::GLint,
+      0,
+      gl::RGBA,
+      gl::UNSIGNED_BYTE,
+      ball_image.as_bytes().as_ptr() as *const gl::types::GLvoid
+    );
+
+    gl::GenerateMipmap(gl::TEXTURE_2D);
+  }
+
   unsafe {
     gl::Viewport(0, 0, window_width as i32, window_height as i32);
     gl::ClearColor(1.0, 0.5, 1.0, 1.0);
     gl::UseProgram(shader_program);
+
+    gl::Enable(gl::BLEND);
+    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
   }
 
   while is_running {
@@ -134,6 +169,8 @@ fn main() -> Result<(), String> {
 
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
+
+      gl::BindTexture(gl::TEXTURE_2D, ball_texture);
 
       gl::BindVertexArray(vertex_array_object);
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
