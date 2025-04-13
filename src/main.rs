@@ -27,7 +27,8 @@ fn main() -> Result<(), String> {
   let vertices: Vec<f32> = vec![
     -0.5, -0.5,
      0.5, -0.5,
-     0.0,  0.5
+     0.5,  0.5,
+    -0.5,  0.5
   ];
 
   let mut vertex_array_buffer: gl::types::GLuint = 0;
@@ -45,11 +46,32 @@ fn main() -> Result<(), String> {
     gl::BindBuffer(gl::ARRAY_BUFFER, 0);
   }
 
+  let element_data: Vec<i32> = vec![
+    0, 1, 2,
+    0, 2, 3
+  ];
+
+  let mut element_buffer_object: gl::types::GLuint = 0;
+  unsafe {
+    gl::GenBuffers(1, &mut element_buffer_object);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, element_buffer_object);
+
+    gl::BufferData(
+      gl::ELEMENT_ARRAY_BUFFER,
+      (element_data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
+      element_data.as_ptr() as *const gl::types::GLvoid,
+      gl::STATIC_DRAW
+    );
+
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+  }
+
   let mut vertex_array_object: gl::types::GLuint = 0;
   unsafe {
     gl::GenVertexArrays(1, &mut vertex_array_object);
     gl::BindVertexArray(vertex_array_object);
     gl::BindBuffer(gl::ARRAY_BUFFER, vertex_array_buffer);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, element_buffer_object);
 
     gl::EnableVertexAttribArray(0);
     gl::VertexAttribPointer(
@@ -114,7 +136,7 @@ fn main() -> Result<(), String> {
       gl::Clear(gl::COLOR_BUFFER_BIT);
 
       gl::BindVertexArray(vertex_array_object);
-      gl::DrawArrays(gl::TRIANGLES, 0, 3);
+      gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
     }
 
