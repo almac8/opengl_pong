@@ -32,54 +32,127 @@ pub fn launch() -> Result<(), String> {
 
   let mut is_running = true;
 
-  let vertices: Vec<f32> = vec![
+  let ball_vertices: Vec<f32> = vec![
     -8.0,  8.0,  0.0, 0.0,
      8.0,  8.0,  1.0, 0.0,
      8.0, -8.0,  1.0, 1.0,
     -8.0, -8.0,  0.0, 1.0
   ];
 
-  let mut vertex_array_buffer: gl::types::GLuint = 0;
+  let paddle_vertices: Vec<f32> = vec![
+    -8.0,  64.0,   0.0, 0.0,
+     8.0,  64.0,   1.0, 0.0,
+     8.0, -64.0,   1.0, 1.0,
+    -8.0, -64.0,   0.0, 1.0
+  ];
+
+  let mut ball_vertex_array_buffer: gl::types::GLuint = 0;
   unsafe {
-    gl::GenBuffers(1, &mut vertex_array_buffer);
-    gl::BindBuffer(gl::ARRAY_BUFFER, vertex_array_buffer);
+    gl::GenBuffers(1, &mut ball_vertex_array_buffer);
+    gl::BindBuffer(gl::ARRAY_BUFFER, ball_vertex_array_buffer);
 
     gl::BufferData(
       gl::ARRAY_BUFFER,
-      (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-      vertices.as_ptr() as *const gl::types::GLvoid,
+      (ball_vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+      ball_vertices.as_ptr() as *const gl::types::GLvoid,
       gl::STATIC_DRAW
     );
 
     gl::BindBuffer(gl::ARRAY_BUFFER, 0);
   }
 
-  let element_data: Vec<i32> = vec![
+  let mut paddle_vertex_array_buffer: gl::types::GLuint = 0;
+  unsafe {
+    gl::GenBuffers(1, &mut paddle_vertex_array_buffer);
+    gl::BindBuffer(gl::ARRAY_BUFFER, paddle_vertex_array_buffer);
+
+    gl::BufferData(
+      gl::ARRAY_BUFFER,
+      (paddle_vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+      paddle_vertices.as_ptr() as *const gl::types::GLvoid,
+      gl::STATIC_DRAW
+    );
+
+    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+  }
+
+  let ball_element_data: Vec<i32> = vec![
     0, 1, 2,
     0, 2, 3
   ];
 
-  let mut element_buffer_object: gl::types::GLuint = 0;
+  let paddle_element_data: Vec<i32> = vec![
+    0, 1, 2,
+    0, 2, 3
+  ];
+
+  let mut ball_element_buffer_object: gl::types::GLuint = 0;
   unsafe {
-    gl::GenBuffers(1, &mut element_buffer_object);
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, element_buffer_object);
+    gl::GenBuffers(1, &mut ball_element_buffer_object);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ball_element_buffer_object);
 
     gl::BufferData(
       gl::ELEMENT_ARRAY_BUFFER,
-      (element_data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
-      element_data.as_ptr() as *const gl::types::GLvoid,
+      (ball_element_data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
+      ball_element_data.as_ptr() as *const gl::types::GLvoid,
       gl::STATIC_DRAW
     );
 
     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
   }
 
-  let mut vertex_array_object: gl::types::GLuint = 0;
+  let mut paddle_element_buffer_object: gl::types::GLuint = 0;
   unsafe {
-    gl::GenVertexArrays(1, &mut vertex_array_object);
-    gl::BindVertexArray(vertex_array_object);
-    gl::BindBuffer(gl::ARRAY_BUFFER, vertex_array_buffer);
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, element_buffer_object);
+    gl::GenBuffers(1, &mut paddle_element_buffer_object);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, paddle_element_buffer_object);
+
+    gl::BufferData(
+      gl::ELEMENT_ARRAY_BUFFER,
+      (paddle_element_data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
+      paddle_element_data.as_ptr() as *const gl::types::GLvoid,
+      gl::STATIC_DRAW
+    );
+
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+  }
+
+  let mut ball_vertex_array_object: gl::types::GLuint = 0;
+  unsafe {
+    gl::GenVertexArrays(1, &mut ball_vertex_array_object);
+    gl::BindVertexArray(ball_vertex_array_object);
+    gl::BindBuffer(gl::ARRAY_BUFFER, ball_vertex_array_buffer);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ball_element_buffer_object);
+
+    gl::EnableVertexAttribArray(0);
+    gl::VertexAttribPointer(
+      0,
+      2,
+      gl::FLOAT,
+      gl::FALSE,
+      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
+      std::ptr::null()
+    );
+
+    gl::EnableVertexAttribArray(1);
+    gl::VertexAttribPointer(
+      1,
+      2,
+      gl::FLOAT,
+      gl::FALSE,
+      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
+      (2 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
+    );
+
+    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+    gl::BindVertexArray(0);
+  }
+
+  let mut paddle_vertex_array_object: gl::types::GLuint = 0;
+  unsafe {
+    gl::GenVertexArrays(1, &mut paddle_vertex_array_object);
+    gl::BindVertexArray(paddle_vertex_array_object);
+    gl::BindBuffer(gl::ARRAY_BUFFER, paddle_vertex_array_buffer);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, paddle_element_buffer_object);
 
     gl::EnableVertexAttribArray(0);
     gl::VertexAttribPointer(
@@ -160,12 +233,35 @@ pub fn launch() -> Result<(), String> {
     gl::GenerateMipmap(gl::TEXTURE_2D);
   }
 
-  let mut model_matrix = prelude::Matrix4::identity();
+  let paddle_image = image::open(Path::new("res/textures/paddle.png")).map_err(|error| error.to_string())?;
+  let mut paddle_texture: gl::types::GLuint = 0;
+  unsafe {
+    gl::GenTextures(1, &mut paddle_texture);
+    gl::BindTexture(gl::TEXTURE_2D, paddle_texture);
+
+    gl::TexImage2D(
+      gl::TEXTURE_2D,
+      0,
+      gl::RGBA as gl::types::GLint,
+      paddle_image.width() as gl::types::GLint,
+      paddle_image.height() as gl::types::GLint,
+      0,
+      gl::RGBA,
+      gl::UNSIGNED_BYTE,
+      paddle_image.as_bytes().as_ptr() as *const gl::types::GLvoid
+    );
+
+    gl::GenerateMipmap(gl::TEXTURE_2D);
+  }
+
+  let mut ball_model_matrix = prelude::Matrix4::identity();
+  let paddle_model_matrix = prelude::Matrix4::identity();
+
   let view_matrix = prelude::Matrix4::identity();
   let projection_matrix = prelude::Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
 
   let ball_start_location = prelude::Vector3::new(window_width as f32 / 2.0, window_height as f32 / 2.0, 0.0);
-  model_matrix.translate(ball_start_location);
+  ball_model_matrix.translate(ball_start_location);
 
   unsafe {
     gl::Viewport(0, 0, window_width as i32, window_height as i32);
@@ -200,29 +296,36 @@ pub fn launch() -> Result<(), String> {
 
     let deltamillis = deltatime.as_millis() as f32;
     let translation_vector = prelude::Vector3::new(ball_velocity_x * deltamillis, ball_velocity_y * deltamillis, 0.0);
-    model_matrix.translate(translation_vector);
+    ball_model_matrix.translate(translation_vector);
 
-    if model_matrix.x.w >= window_width as f32 || model_matrix.x.w <= 0.0 {
+    if ball_model_matrix.x.w >= window_width as f32 || ball_model_matrix.x.w <= 0.0 {
       ball_velocity_x *= -1.0;
     }
 
-    if model_matrix.y.w >= window_height as f32 || model_matrix.y.w <= 0.0 {
+    if ball_model_matrix.y.w >= window_height as f32 || ball_model_matrix.y.w <= 0.0 {
       ball_velocity_y *= -1.0;
     }
     
     let model_uniform_name = CString::new("model").map_err(|error| error.to_string())?;
     let model_uniform_location = unsafe { gl::GetUniformLocation(shader_program, model_uniform_name.as_ptr()) };
     
-    unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, model_matrix.flatten().as_ptr()); }
+    unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, ball_model_matrix.flatten().as_ptr()); }
 
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
 
       gl::BindTexture(gl::TEXTURE_2D, ball_texture);
-      gl::BindVertexArray(vertex_array_object);
-
+      gl::BindVertexArray(ball_vertex_array_object);
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
+      gl::BindVertexArray(0);
+    }
 
+    unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, paddle_model_matrix.flatten().as_ptr()); }
+
+    unsafe {
+      gl::BindTexture(gl::TEXTURE_2D, paddle_texture);
+      gl::BindVertexArray(paddle_vertex_array_object);
+      gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
     }
 
