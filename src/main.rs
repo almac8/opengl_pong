@@ -160,7 +160,7 @@ fn main() -> Result<(), String> {
     gl::GenerateMipmap(gl::TEXTURE_2D);
   }
 
-  let model_matrix = Matrix4::identity();
+  let mut model_matrix = Matrix4::identity();
   let view_matrix = Matrix4::identity();
   let projection_matrix = Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
 
@@ -187,7 +187,7 @@ fn main() -> Result<(), String> {
     }
 
     let translation_vector = Vector3::new(1.0, 1.0, 0.0);
-    //  model_matrix.translate(translation_vector);
+    model_matrix.translate(translation_vector);
     
     let model_uniform_name = CString::new("model").map_err(|error| error.to_string())?;
     let model_uniform_location = unsafe { gl::GetUniformLocation(shader_program, model_uniform_name.as_ptr()) };

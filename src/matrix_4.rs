@@ -1,4 +1,4 @@
-use crate::vector_4::Vector4;
+use crate::{vector_3::Vector3, vector_4::Vector4};
 
 pub struct Matrix4 {
   x: Vector4,
@@ -41,11 +41,19 @@ impl Matrix4 {
       self.x.w, self.y.w, self.z.w, self.w.w
     ]
   }
+  
+  pub fn translate(&mut self, translation_vector: Vector3) {
+    self.x.w += translation_vector.x;
+    self.y.w += translation_vector.y;
+    self.z.w += translation_vector.z;
+  }
 }
 
 #[cfg(test)]
 mod tests {
-  use super::Matrix4;
+  use crate::vector_3::Vector3;
+
+use super::Matrix4;
 
   #[test]
   fn identity_constructor() {
@@ -133,5 +141,37 @@ mod tests {
     assert_eq!(flattened_matrix[13], 0.0);
     assert_eq!(flattened_matrix[14], 0.0);
     assert_eq!(flattened_matrix[15], 1.0);
+  }
+
+  #[test]
+  fn translation() {
+    let translation_x = 32.0;
+    let translation_y = 32.0;
+    let translation_z = 0.0;
+
+    let mut matrix = Matrix4::identity();
+    let translation_vector = Vector3::new(translation_x, translation_y, translation_z);
+
+    matrix.translate(translation_vector);
+
+    assert_eq!(matrix.x.x, 1.0);
+    assert_eq!(matrix.x.y, 0.0);
+    assert_eq!(matrix.x.z, 0.0);
+    assert_eq!(matrix.x.w, translation_x);
+
+    assert_eq!(matrix.y.x, 0.0);
+    assert_eq!(matrix.y.y, 1.0);
+    assert_eq!(matrix.y.z, 0.0);
+    assert_eq!(matrix.y.w, translation_y);
+
+    assert_eq!(matrix.z.x, 0.0);
+    assert_eq!(matrix.z.y, 0.0);
+    assert_eq!(matrix.z.z, 1.0);
+    assert_eq!(matrix.z.w, translation_z);
+
+    assert_eq!(matrix.w.x, 0.0);
+    assert_eq!(matrix.w.y, 0.0);
+    assert_eq!(matrix.w.z, 0.0);
+    assert_eq!(matrix.w.w, 1.0);
   }
 }
