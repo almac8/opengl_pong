@@ -1,6 +1,9 @@
 use std::{ffi::CString, path::Path};
 use sdl2::event::Event;
 
+mod vector_4;
+use vector_4::Vector4;
+
 fn main() -> Result<(), String> {
   let window_width = 800;
   let window_height = 600;
@@ -241,18 +244,5 @@ impl Matrix4 {
       self.x.z, self.y.z, self.z.z, self.w.z,
       self.x.w, self.y.w, self.z.w, self.w.w
     ]
-  }
-}
-
-struct Vector4 {
-  x: f32,
-  y: f32,
-  z: f32,
-  w: f32,
-}
-
-impl Vector4 {
-  fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
-    Self { x, y, z, w }
   }
 }
