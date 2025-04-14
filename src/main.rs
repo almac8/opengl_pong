@@ -2,7 +2,9 @@ use std::{ffi::CString, path::Path};
 use sdl2::event::Event;
 
 mod vector_4;
-use vector_4::Vector4;
+mod matrix_4;
+
+use matrix_4::Matrix4;
 
 fn main() -> Result<(), String> {
   let window_width = 800;
@@ -202,47 +204,4 @@ fn main() -> Result<(), String> {
   }
 
   Ok(())
-}
-
-struct Matrix4 {
-  x: Vector4,
-  y: Vector4,
-  z: Vector4,
-  w: Vector4,
-}
-
-impl Matrix4 {
-  fn identity() -> Self {
-    Self {
-      x: Vector4::new(1.0, 0.0, 0.0, 0.0),
-      y: Vector4::new(0.0, 1.0, 0.0, 0.0),
-      z: Vector4::new(0.0, 0.0, 1.0, 0.0),
-      w: Vector4::new(0.0, 0.0, 0.0, 1.0)
-    }
-  }
-
-  fn orthographic(left: f32, right: f32, bottom:f32, top: f32, near: f32, far: f32) -> Self {
-    let rml = right - left;
-    let rpl = right + left;
-    let tmb = top - bottom;
-    let tpb = top + bottom;
-    let fmn = far - near;
-    let fpn = far + near;
-
-    Self {
-      x: Vector4::new(2.0 / rml, 0.0, 0.0, -(rpl / rml)),
-      y: Vector4::new(0.0, 2.0 / tmb, 0.0, -(tpb / tmb)),
-      z: Vector4::new(0.0, 0.0, -2.0 / fmn, -(fpn / fmn)),
-      w: Vector4::new(0.0, 0.0, 0.0, 1.0)
-    }
-  }
-
-  fn flatten(&self) -> Vec<f32> {
-    vec![
-      self.x.x, self.y.x, self.z.x, self.w.x,
-      self.x.y, self.y.y, self.z.y, self.w.y,
-      self.x.z, self.y.z, self.z.z, self.w.z,
-      self.x.w, self.y.w, self.z.w, self.w.w
-    ]
-  }
 }
