@@ -1,4 +1,4 @@
-use std::{ffi::CString, fs, path::Path};
+use std::{ffi::CString, fs, path::Path, time::Instant};
 use sdl2::event::Event;
 
 mod math;
@@ -164,6 +164,9 @@ pub fn launch() -> Result<(), String> {
   let view_matrix = prelude::Matrix4::identity();
   let projection_matrix = prelude::Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
 
+  let ball_start_location = prelude::Vector3::new(window_width as f32 / 2.0, window_height as f32 / 2.0, 0.0);
+  model_matrix.translate(ball_start_location);
+
   unsafe {
     gl::Viewport(0, 0, window_width as i32, window_height as i32);
     gl::ClearColor(1.0, 0.5, 1.0, 1.0);
@@ -181,15 +184,22 @@ pub fn launch() -> Result<(), String> {
   let projection_uniform_location = unsafe { gl::GetUniformLocation(shader_program, projection_uniform_name.as_ptr()) };
   unsafe { gl::UniformMatrix4fv(projection_uniform_location, 1, gl::FALSE, projection_matrix.flatten().as_ptr()); }
 
-  let mut ball_velocity_x = 1.0;
-  let mut ball_velocity_y = 1.0;
+  let mut ball_velocity_x = 0.5;
+  let mut ball_velocity_y = 0.5;
 
+  let mut current_time = Instant::now();
+  let mut previous_time = current_time;
   while is_running {
+    current_time = Instant::now();
+    let deltatime = current_time - previous_time;
+    previous_time = current_time;
+
     for event in event_pump.poll_iter() {
       if let Event::Quit { .. } = event { is_running = false }
     }
 
-    let translation_vector = prelude::Vector3::new(ball_velocity_x, ball_velocity_y, 0.0);
+    let deltamillis = deltatime.as_millis() as f32;
+    let translation_vector = prelude::Vector3::new(ball_velocity_x * deltamillis, ball_velocity_y * deltamillis, 0.0);
     model_matrix.translate(translation_vector);
 
     if model_matrix.x.w >= window_width as f32 || model_matrix.x.w <= 0.0 {
