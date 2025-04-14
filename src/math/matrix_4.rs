@@ -1,4 +1,4 @@
-use crate::{vector_3::Vector3, vector_4::Vector4};
+use crate::prelude::{Vector3, Vector4};
 
 pub struct Matrix4 {
   x: Vector4,
@@ -51,9 +51,8 @@ impl Matrix4 {
 
 #[cfg(test)]
 mod tests {
-  use crate::vector_3::Vector3;
-
-use super::Matrix4;
+  use super::Matrix4;
+  use crate::prelude::Vector3;
 
   #[test]
   fn identity_constructor() {
