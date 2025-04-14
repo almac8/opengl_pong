@@ -1,9 +1,11 @@
 use std::{ffi::CString, path::Path};
 use sdl2::event::Event;
 
+mod vector_3;
 mod vector_4;
 mod matrix_4;
 
+use vector_3::Vector3;
 use matrix_4::Matrix4;
 
 fn main() -> Result<(), String> {
@@ -183,6 +185,9 @@ fn main() -> Result<(), String> {
     for event in event_pump.poll_iter() {
       if let Event::Quit { .. } = event { is_running = false }
     }
+
+    let translation_vector = Vector3::new(1.0, 1.0, 0.0);
+    //  model_matrix.translate(translation_vector);
     
     let model_uniform_name = CString::new("model").map_err(|error| error.to_string())?;
     let model_uniform_location = unsafe { gl::GetUniformLocation(shader_program, model_uniform_name.as_ptr()) };
