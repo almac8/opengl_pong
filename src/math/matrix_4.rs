@@ -1,10 +1,10 @@
 use crate::prelude::{Vector3, Vector4};
 
 pub struct Matrix4 {
-  x: Vector4,
-  y: Vector4,
-  z: Vector4,
-  w: Vector4,
+  pub x: Vector4,
+  pub y: Vector4,
+  pub z: Vector4,
+  pub w: Vector4,
 }
 
 impl Matrix4 {

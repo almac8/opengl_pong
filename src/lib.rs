@@ -9,7 +9,6 @@ mod prelude {
   pub use crate::math::Matrix4;
 }
 
-
 pub fn launch() -> Result<(), String> {
   let window_width = 800;
   let window_height = 600;
@@ -182,13 +181,24 @@ pub fn launch() -> Result<(), String> {
   let projection_uniform_location = unsafe { gl::GetUniformLocation(shader_program, projection_uniform_name.as_ptr()) };
   unsafe { gl::UniformMatrix4fv(projection_uniform_location, 1, gl::FALSE, projection_matrix.flatten().as_ptr()); }
 
+  let mut ball_velocity_x = 1.0;
+  let mut ball_velocity_y = 1.0;
+
   while is_running {
     for event in event_pump.poll_iter() {
       if let Event::Quit { .. } = event { is_running = false }
     }
 
-    let translation_vector = prelude::Vector3::new(1.0, 1.0, 0.0);
+    let translation_vector = prelude::Vector3::new(ball_velocity_x, ball_velocity_y, 0.0);
     model_matrix.translate(translation_vector);
+
+    if model_matrix.x.w >= window_width as f32 || model_matrix.x.w <= 0.0 {
+      ball_velocity_x *= -1.0;
+    }
+
+    if model_matrix.y.w >= window_height as f32 || model_matrix.y.w <= 0.0 {
+      ball_velocity_y *= -1.0;
+    }
     
     let model_uniform_name = CString::new("model").map_err(|error| error.to_string())?;
     let model_uniform_location = unsafe { gl::GetUniformLocation(shader_program, model_uniform_name.as_ptr()) };
