@@ -25,10 +25,10 @@ fn main() -> Result<(), String> {
   let mut is_running = true;
 
   let vertices: Vec<f32> = vec![
-    0.0,  16.0, 0.0, 0.0,
-    16.0, 16.0, 1.0, 0.0,
-    16.0, 0.0,  1.0, 1.0,
-    0.0,  0.0,  0.0, 1.0
+    -8.0,  8.0,  0.0, 0.0,
+     8.0,  8.0,  1.0, 0.0,
+     8.0, -8.0,  1.0, 1.0,
+    -8.0, -8.0,  0.0, 1.0
   ];
 
   let mut vertex_array_buffer: gl::types::GLuint = 0;
