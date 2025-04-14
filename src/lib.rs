@@ -1,4 +1,4 @@
-use std::{ffi::CString, fs, path::Path, time::Instant};
+use std::{ffi::CString, fs, path::Path, time::{Duration, Instant}};
 use sdl2::event::Event;
 
 mod math;
@@ -227,6 +227,16 @@ pub fn launch() -> Result<(), String> {
     }
 
     window.gl_swap_window();
+
+    let target_fps = 60;
+
+    let frame_max_duration = Duration::from_secs(1) / target_fps;
+
+    let end_time = Instant::now();
+    let frame_duration = end_time - previous_time;
+    let time_left = frame_max_duration - frame_duration;
+
+    std::thread::sleep(time_left);
   }
 
   Ok(())
