@@ -137,21 +137,29 @@ pub fn launch() -> Result<(), String> {
 
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
+    }
 
-      gl::BindTexture(gl::TEXTURE_2D, ball_texture.id());
+    ball_texture.bind();
+
+    unsafe {
       gl::BindVertexArray(ball_vertex_array_object.id());
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
     }
 
+    ball_texture.unbind();
+
     unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, paddle_model_matrix.flatten().as_ptr()); }
 
+    paddle_texture.bind();
+
     unsafe {
-      gl::BindTexture(gl::TEXTURE_2D, paddle_texture.id());
       gl::BindVertexArray(paddle_vertex_array_object.id());
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
     }
+
+    paddle_texture.unbind();
 
     window.gl_swap_window();
 

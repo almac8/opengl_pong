@@ -33,8 +33,16 @@ impl Texture {
     )
   }
 
-  pub fn id(&self) -> gl::types::GLuint {
-    self.id
+  pub fn bind(&self) {
+    unsafe {
+      gl::BindTexture(gl::TEXTURE_2D, self.id);
+    }
+  }
+
+  pub fn unbind(&self) {
+    unsafe {
+      gl::BindTexture(gl::TEXTURE_2D, 0);
+    }
   }
 }
 
