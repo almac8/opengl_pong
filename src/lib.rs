@@ -96,13 +96,8 @@ pub fn launch() -> Result<(), String> {
     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
   }
 
-  let view_uniform_name = CString::new("view").map_err(|error| error.to_string())?;
-  let view_uniform_location = unsafe { gl::GetUniformLocation(shader_program.id(), view_uniform_name.as_ptr()) };
-  unsafe { gl::UniformMatrix4fv(view_uniform_location, 1, gl::FALSE, view_matrix.flatten().as_ptr()); }
-
-  let projection_uniform_name = CString::new("projection").map_err(|error| error.to_string())?;
-  let projection_uniform_location = unsafe { gl::GetUniformLocation(shader_program.id(), projection_uniform_name.as_ptr()) };
-  unsafe { gl::UniformMatrix4fv(projection_uniform_location, 1, gl::FALSE, projection_matrix.flatten().as_ptr()); }
+  shader_program.set_view_matrix(view_matrix)?;
+  shader_program.set_projection_matrix(projection_matrix)?;
 
   let mut ball_velocity_x = 0.5;
   let mut ball_velocity_y = 0.5;
