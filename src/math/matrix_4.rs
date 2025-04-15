@@ -1,4 +1,4 @@
-use crate::prelude::{Vector2, Vector4};
+use crate::prelude::Vector4;
 
 pub struct Matrix4 {
   pub x: Vector4,
@@ -40,11 +40,6 @@ impl Matrix4 {
       self.x.z, self.y.z, self.z.z, self.w.z,
       self.x.w, self.y.w, self.z.w, self.w.w
     ]
-  }
-  
-  pub fn translate(&mut self, translation_vector: Vector2) {
-    self.x.w += translation_vector.x;
-    self.y.w += translation_vector.y;
   }
 }
 
@@ -138,36 +133,5 @@ mod tests {
     assert_eq!(flattened_matrix[13], 0.0);
     assert_eq!(flattened_matrix[14], 0.0);
     assert_eq!(flattened_matrix[15], 1.0);
-  }
-
-  #[test]
-  fn translation() {
-    let translation_x = 32.0;
-    let translation_y = 32.0;
-
-    let mut matrix = Matrix4::identity();
-    let translation_vector = crate::prelude::Vector2::new(translation_x, translation_y);
-
-    matrix.translate(translation_vector);
-
-    assert_eq!(matrix.x.x, 1.0);
-    assert_eq!(matrix.x.y, 0.0);
-    assert_eq!(matrix.x.z, 0.0);
-    assert_eq!(matrix.x.w, translation_x);
-
-    assert_eq!(matrix.y.x, 0.0);
-    assert_eq!(matrix.y.y, 1.0);
-    assert_eq!(matrix.y.z, 0.0);
-    assert_eq!(matrix.y.w, translation_y);
-
-    assert_eq!(matrix.z.x, 0.0);
-    assert_eq!(matrix.z.y, 0.0);
-    assert_eq!(matrix.z.z, 1.0);
-    assert_eq!(matrix.z.w, 0.0);
-
-    assert_eq!(matrix.w.x, 0.0);
-    assert_eq!(matrix.w.y, 0.0);
-    assert_eq!(matrix.w.z, 0.0);
-    assert_eq!(matrix.w.w, 1.0);
   }
 }

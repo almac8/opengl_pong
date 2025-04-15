@@ -9,6 +9,7 @@ mod shader;
 mod shader_program;
 mod texture;
 mod sprite;
+mod location;
 
 mod prelude {
   pub use crate::math::Vector2;
@@ -21,14 +22,15 @@ mod prelude {
   pub use crate::shader_program::ShaderProgram;
   pub use crate::texture::Texture;
   pub use crate::sprite::Sprite;
+  pub use crate::location::Location;
 }
 
 use prelude::{
   Vector2,
-  Matrix4,
   Shader,
   ShaderProgram,
-  Sprite
+  Sprite,
+  Location
 };
 
 pub fn launch() -> Result<(), String> {
@@ -64,21 +66,12 @@ pub fn launch() -> Result<(), String> {
     ]
   );
   
-  let mut ball_model_matrix = Matrix4::identity();
-  let mut left_paddle_model_matrix = Matrix4::identity();
-  let mut right_paddle_model_matrix = Matrix4::identity();
+  let mut ball_location = Location::at(window_width as f32 / 2.0, window_height as f32 / 2.0);
+  let left_paddle_location = Location::at(32.0, window_height as f32 / 2.0);
+  let right_paddle_location = Location::at(window_width as f32 - 32.0, window_height as f32 / 2.0);
 
   let view_matrix = prelude::Matrix4::identity();
   let projection_matrix = prelude::Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
-
-  let ball_start_location = prelude::Vector2::new(window_width as f32 / 2.0, window_height as f32 / 2.0);
-  ball_model_matrix.translate(ball_start_location);
-  
-  let left_paddle_start_location = prelude::Vector2::new(32.0, window_height as f32 / 2.0);
-  left_paddle_model_matrix.translate(left_paddle_start_location);
-
-  let right_paddle_start_location = prelude::Vector2::new(window_width as f32 - 32.0, window_height as f32 / 2.0);
-  right_paddle_model_matrix.translate(right_paddle_start_location);
 
   unsafe {
     gl::Viewport(0, 0, window_width as i32, window_height as i32);
@@ -101,20 +94,22 @@ pub fn launch() -> Result<(), String> {
     current_time = Instant::now();
     let deltatime = current_time - previous_time;
     previous_time = current_time;
+    let deltamillis = deltatime.as_millis() as f32;
 
     for event in event_pump.poll_iter() {
       if let Event::Quit { .. } = event { is_running = false }
     }
+    
+    ball_location.translate(Vector2::new(
+      ball_velocity_x * deltamillis,
+      ball_velocity_y * deltamillis
+    ));
 
-    let deltamillis = deltatime.as_millis() as f32;
-    let translation_vector = Vector2::new(ball_velocity_x * deltamillis, ball_velocity_y * deltamillis);
-    ball_model_matrix.translate(translation_vector);
-
-    if ball_model_matrix.x.w >= window_width as f32 || ball_model_matrix.x.w <= 0.0 {
+    if ball_location.x() >= window_width as f32 || ball_location.x() <= 0.0 {
       ball_velocity_x *= -1.0;
     }
 
-    if ball_model_matrix.y.w >= window_height as f32 || ball_model_matrix.y.w <= 0.0 {
+    if ball_location.y() >= window_height as f32 || ball_location.y() <= 0.0 {
       ball_velocity_y *= -1.0;
     }
 
@@ -122,13 +117,13 @@ pub fn launch() -> Result<(), String> {
       gl::Clear(gl::COLOR_BUFFER_BIT);
     }
     
-    shader_program.set_model_matrix(&ball_model_matrix)?;
+    shader_program.set_model_matrix(ball_location.matrix())?;
     ball_sprite.render();
-
-    shader_program.set_model_matrix(&left_paddle_model_matrix)?;
+    
+    shader_program.set_model_matrix(left_paddle_location.matrix())?;
     paddle_sprite.render();
-
-    shader_program.set_model_matrix(&right_paddle_model_matrix)?;
+    
+    shader_program.set_model_matrix(right_paddle_location.matrix())?;
     paddle_sprite.render();
 
     window.gl_swap_window();
