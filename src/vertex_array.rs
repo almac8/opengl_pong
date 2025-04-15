@@ -41,8 +41,16 @@ impl VertexArray {
     Self { id }
   }
 
-  pub fn id(&self) -> gl::types::GLuint {
-    self.id
+  pub fn bind(&self) {
+    unsafe {
+      gl::BindVertexArray(self.id);
+    }
+  }
+
+  pub fn unbind(&self) {
+    unsafe {
+      gl::BindVertexArray(0);
+    }
   }
 }
 

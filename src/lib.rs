@@ -140,37 +140,26 @@ pub fn launch() -> Result<(), String> {
     }
 
     ball_texture.bind();
-
-    unsafe {
-      gl::BindVertexArray(ball_vertex_array_object.id());
-      gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
-      gl::BindVertexArray(0);
-    }
-
+    ball_vertex_array_object.bind();
+    unsafe { gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null()); }
+    ball_vertex_array_object.unbind();
     ball_texture.unbind();
 
     unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, paddle_model_matrix.flatten().as_ptr()); }
 
     paddle_texture.bind();
-
-    unsafe {
-      gl::BindVertexArray(paddle_vertex_array_object.id());
-      gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
-      gl::BindVertexArray(0);
-    }
-
+    paddle_vertex_array_object.bind();
+    unsafe { gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null()); }
+    paddle_vertex_array_object.unbind();
     paddle_texture.unbind();
 
     window.gl_swap_window();
 
     let target_fps = 60;
-
     let frame_max_duration = Duration::from_secs(1) / target_fps;
-
     let end_time = Instant::now();
     let frame_duration = end_time - previous_time;
     let time_left = frame_max_duration - frame_duration;
-
     std::thread::sleep(time_left);
   }
 
