@@ -8,26 +8,25 @@ mod vertex_array;
 mod shader;
 mod shader_program;
 mod texture;
+mod sprite;
 
 mod prelude {
   pub use crate::math::Vector3;
   pub use crate::math::Vector4;
   pub use crate::math::Matrix4;
-
   pub use crate::vertex_data::generate_textured_vertex_data;
   pub use crate::buffer_object::BufferObject;
   pub use crate::vertex_array::VertexArray;
   pub use crate::shader::Shader;
   pub use crate::shader_program::ShaderProgram;
   pub use crate::texture::Texture;
+  pub use crate::sprite::Sprite;
 }
 
 use prelude::{
-  BufferObject,
-  VertexArray,
   Shader,
   ShaderProgram,
-  Texture
+  Sprite
 };
 
 pub fn launch() -> Result<(), String> {
@@ -53,17 +52,8 @@ pub fn launch() -> Result<(), String> {
 
   let mut is_running = true;
 
-  let (ball_vertex_data, ball_element_data) = crate::prelude::generate_textured_vertex_data(16, 16);
-  let (paddle_vertex_data, paddle_element_data) = crate::prelude::generate_textured_vertex_data(16, 128);
-
-  let ball_vertex_array_buffer = BufferObject::vertex_array(ball_vertex_data);
-  let paddle_vertex_array_buffer = BufferObject::vertex_array(paddle_vertex_data);
-
-  let ball_element_buffer_object = BufferObject::element_array(ball_element_data);
-  let paddle_element_buffer_object = BufferObject::element_array(paddle_element_data);
-
-  let ball_vertex_array_object = VertexArray::textured(ball_vertex_array_buffer, ball_element_buffer_object);
-  let paddle_vertex_array_object = VertexArray::textured(paddle_vertex_array_buffer, paddle_element_buffer_object);
+  let ball_sprite = Sprite::new(Path::new("res/textures/ball.png"), 16, 16)?;
+  let paddle_sprite = Sprite::new(Path::new("res/textures/paddle.png"), 16, 128)?;
 
   let shader_program = ShaderProgram::link(
     vec![
@@ -71,9 +61,6 @@ pub fn launch() -> Result<(), String> {
       Shader::fragment(Path::new("res/shaders/fragment_shader.glsl"))?
     ]
   );
-
-  let ball_texture = Texture::load(Path::new("res/textures/ball.png"))?;
-  let paddle_texture = Texture::load(Path::new("res/textures/paddle.png"))?;
   
   let mut ball_model_matrix = prelude::Matrix4::identity();
   let mut paddle_model_matrix = prelude::Matrix4::identity();
@@ -125,25 +112,15 @@ pub fn launch() -> Result<(), String> {
       ball_velocity_y *= -1.0;
     }
 
-    shader_program.set_model_matrix(&ball_model_matrix)?;
-
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
     }
-
-    ball_texture.bind();
-    ball_vertex_array_object.bind();
-    unsafe { gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null()); }
-    ball_vertex_array_object.unbind();
-    ball_texture.unbind();
+    
+    shader_program.set_model_matrix(&ball_model_matrix)?;
+    ball_sprite.render();
 
     shader_program.set_model_matrix(&paddle_model_matrix)?;
-
-    paddle_texture.bind();
-    paddle_vertex_array_object.bind();
-    unsafe { gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null()); }
-    paddle_vertex_array_object.unbind();
-    paddle_texture.unbind();
+    paddle_sprite.render();
 
     window.gl_swap_window();
 
