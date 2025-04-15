@@ -4,6 +4,7 @@ use sdl2::event::Event;
 mod math;
 mod vertex_data;
 mod buffer_object;
+mod vertex_array;
 
 mod prelude {
   pub use crate::math::Vector3;
@@ -13,9 +14,11 @@ mod prelude {
   pub use crate::vertex_data::generate_textured_vertex_data;
 
   pub use crate::buffer_object::BufferObject;
+
+  pub use crate::vertex_array::VertexArray;
 }
 
-use prelude::BufferObject;
+use prelude::{ BufferObject, VertexArray };
 
 pub fn launch() -> Result<(), String> {
   let window_width = 800;
@@ -48,69 +51,10 @@ pub fn launch() -> Result<(), String> {
 
   let ball_element_buffer_object = BufferObject::element_array(ball_element_data);
   let paddle_element_buffer_object = BufferObject::element_array(paddle_element_data);
+
+  let ball_vertex_array_object = VertexArray::textured(ball_vertex_array_buffer, ball_element_buffer_object);
+  let paddle_vertex_array_object = VertexArray::textured(paddle_vertex_array_buffer, paddle_element_buffer_object);
   
-  let mut ball_vertex_array_object: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenVertexArrays(1, &mut ball_vertex_array_object);
-    gl::BindVertexArray(ball_vertex_array_object);
-    gl::BindBuffer(gl::ARRAY_BUFFER, ball_vertex_array_buffer.id());
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ball_element_buffer_object.id());
-
-    gl::EnableVertexAttribArray(0);
-    gl::VertexAttribPointer(
-      0,
-      2,
-      gl::FLOAT,
-      gl::FALSE,
-      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
-      std::ptr::null()
-    );
-
-    gl::EnableVertexAttribArray(1);
-    gl::VertexAttribPointer(
-      1,
-      2,
-      gl::FLOAT,
-      gl::FALSE,
-      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
-      (2 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
-    );
-
-    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-    gl::BindVertexArray(0);
-  }
-
-  let mut paddle_vertex_array_object: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenVertexArrays(1, &mut paddle_vertex_array_object);
-    gl::BindVertexArray(paddle_vertex_array_object);
-    gl::BindBuffer(gl::ARRAY_BUFFER, paddle_vertex_array_buffer.id());
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, paddle_element_buffer_object.id());
-
-    gl::EnableVertexAttribArray(0);
-    gl::VertexAttribPointer(
-      0,
-      2,
-      gl::FLOAT,
-      gl::FALSE,
-      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
-      std::ptr::null()
-    );
-
-    gl::EnableVertexAttribArray(1);
-    gl::VertexAttribPointer(
-      1,
-      2,
-      gl::FLOAT,
-      gl::FALSE,
-      (4 * std::mem::size_of::<f32>()) as gl::types::GLint,
-      (2 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
-    );
-
-    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-    gl::BindVertexArray(0);
-  }
-
   let vertex_shader_source = CString::new(
     fs::read_to_string(Path::new("res/shaders/vertex_shader.glsl")).map_err(|error| error.to_string())?
   ).map_err(|error| error.to_string())?;
@@ -251,7 +195,7 @@ pub fn launch() -> Result<(), String> {
       gl::Clear(gl::COLOR_BUFFER_BIT);
 
       gl::BindTexture(gl::TEXTURE_2D, ball_texture);
-      gl::BindVertexArray(ball_vertex_array_object);
+      gl::BindVertexArray(ball_vertex_array_object.id());
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
     }
@@ -260,7 +204,7 @@ pub fn launch() -> Result<(), String> {
 
     unsafe {
       gl::BindTexture(gl::TEXTURE_2D, paddle_texture);
-      gl::BindVertexArray(paddle_vertex_array_object);
+      gl::BindVertexArray(paddle_vertex_array_object.id());
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
     }
