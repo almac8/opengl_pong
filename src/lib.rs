@@ -1,5 +1,5 @@
 use std::{path::Path, time::{Duration, Instant}};
-use sdl2::event::Event;
+use sdl2::{event::Event, keyboard::Keycode};
 
 mod math;
 mod vertex_data;
@@ -67,7 +67,7 @@ pub fn launch() -> Result<(), String> {
   );
   
   let mut ball_location = Location::at(window_width as f32 / 2.0, window_height as f32 / 2.0);
-  let left_paddle_location = Location::at(32.0, window_height as f32 / 2.0);
+  let mut left_paddle_location = Location::at(32.0, window_height as f32 / 2.0);
   let right_paddle_location = Location::at(window_width as f32 - 32.0, window_height as f32 / 2.0);
 
   let view_matrix = prelude::Matrix4::identity();
@@ -87,6 +87,7 @@ pub fn launch() -> Result<(), String> {
 
   let mut ball_velocity_x = 0.5;
   let mut ball_velocity_y = 0.5;
+  let mut left_paddle_velocity = 0.0;
 
   let mut current_time = Instant::now();
   let mut previous_time = current_time;
@@ -97,7 +98,31 @@ pub fn launch() -> Result<(), String> {
     let deltamillis = deltatime.as_millis() as f32;
 
     for event in event_pump.poll_iter() {
-      if let Event::Quit { .. } = event { is_running = false }
+      match event {
+        Event::Quit { .. } => is_running = false,
+
+        Event::KeyDown { keycode: Some(keycode), repeat, .. } => {
+          if !repeat {
+            match keycode {
+              Keycode::W => left_paddle_velocity += -0.5,
+              Keycode::S => left_paddle_velocity += 0.5,
+  
+              _ => {}
+            }
+          }
+        },
+
+        Event::KeyUp { keycode: Some(keycode), .. } => {
+          match keycode {
+            Keycode::W => left_paddle_velocity -= -0.5,
+            Keycode::S => left_paddle_velocity -= 0.5,
+
+            _ => {}
+          }
+        },
+
+        _ => {}
+      }
     }
     
     ball_location.translate(Vector2::new(
@@ -105,13 +130,13 @@ pub fn launch() -> Result<(), String> {
       ball_velocity_y * deltamillis
     ));
 
-    if ball_location.x() >= window_width as f32 || ball_location.x() <= 0.0 {
-      ball_velocity_x *= -1.0;
-    }
+    if ball_location.x() >= window_width as f32 || ball_location.x() <= 0.0 { ball_velocity_x *= -1.0; }
+    if ball_location.y() >= window_height as f32 || ball_location.y() <= 0.0 { ball_velocity_y *= -1.0; }
 
-    if ball_location.y() >= window_height as f32 || ball_location.y() <= 0.0 {
-      ball_velocity_y *= -1.0;
-    }
+    left_paddle_location.translate(Vector2::new(
+      0.0,
+      left_paddle_velocity * deltamillis
+    ));
 
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
