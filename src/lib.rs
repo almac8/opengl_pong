@@ -1,4 +1,4 @@
-use std::{ffi::CString, path::Path, time::{Duration, Instant}};
+use std::{path::Path, time::{Duration, Instant}};
 use sdl2::event::Event;
 
 mod math;
@@ -96,8 +96,8 @@ pub fn launch() -> Result<(), String> {
     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
   }
 
-  shader_program.set_view_matrix(view_matrix)?;
-  shader_program.set_projection_matrix(projection_matrix)?;
+  shader_program.set_view_matrix(&view_matrix)?;
+  shader_program.set_projection_matrix(&projection_matrix)?;
 
   let mut ball_velocity_x = 0.5;
   let mut ball_velocity_y = 0.5;
@@ -124,11 +124,8 @@ pub fn launch() -> Result<(), String> {
     if ball_model_matrix.y.w >= window_height as f32 || ball_model_matrix.y.w <= 0.0 {
       ball_velocity_y *= -1.0;
     }
-    
-    let model_uniform_name = CString::new("model").map_err(|error| error.to_string())?;
-    let model_uniform_location = unsafe { gl::GetUniformLocation(shader_program.id(), model_uniform_name.as_ptr()) };
-    
-    unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, ball_model_matrix.flatten().as_ptr()); }
+
+    shader_program.set_model_matrix(&ball_model_matrix)?;
 
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -140,7 +137,7 @@ pub fn launch() -> Result<(), String> {
     ball_vertex_array_object.unbind();
     ball_texture.unbind();
 
-    unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, paddle_model_matrix.flatten().as_ptr()); }
+    shader_program.set_model_matrix(&paddle_model_matrix)?;
 
     paddle_texture.bind();
     paddle_vertex_array_object.bind();

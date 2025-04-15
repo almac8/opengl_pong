@@ -33,15 +33,19 @@ impl ShaderProgram {
     self.id
   }
 
-  pub fn set_view_matrix(&self, matrix: Matrix4) -> Result<(), String> {
+  pub fn set_model_matrix(&self, matrix: &Matrix4) -> Result<(), String> {
+    self.set_uniform_mat4("model", matrix)
+  }
+
+  pub fn set_view_matrix(&self, matrix: &Matrix4) -> Result<(), String> {
     self.set_uniform_mat4("view", matrix)
   }
 
-  pub fn set_projection_matrix(&self, matrix: Matrix4) -> Result<(), String> {
+  pub fn set_projection_matrix(&self, matrix: &Matrix4) -> Result<(), String> {
     self.set_uniform_mat4("projection", matrix)
   }
 
-  fn set_uniform_mat4(&self, uniform_name: &str, matrix: Matrix4) -> Result<(), String>{
+  fn set_uniform_mat4(&self, uniform_name: &str, matrix: &Matrix4) -> Result<(), String>{
     let projection_uniform_name = CString::new(uniform_name).map_err(|error| error.to_string())?;
     let projection_uniform_location = unsafe { gl::GetUniformLocation(self.id(), projection_uniform_name.as_ptr()) };
     unsafe { gl::UniformMatrix4fv(projection_uniform_location, 1, gl::FALSE, matrix.flatten().as_ptr()); }
