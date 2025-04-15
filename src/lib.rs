@@ -24,6 +24,7 @@ mod prelude {
 }
 
 use prelude::{
+  Matrix4,
   Shader,
   ShaderProgram,
   Sprite
@@ -62,8 +63,9 @@ pub fn launch() -> Result<(), String> {
     ]
   );
   
-  let mut ball_model_matrix = prelude::Matrix4::identity();
-  let mut paddle_model_matrix = prelude::Matrix4::identity();
+  let mut ball_model_matrix = Matrix4::identity();
+  let mut left_paddle_model_matrix = Matrix4::identity();
+  let mut right_paddle_model_matrix = Matrix4::identity();
 
   let view_matrix = prelude::Matrix4::identity();
   let projection_matrix = prelude::Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
@@ -71,8 +73,11 @@ pub fn launch() -> Result<(), String> {
   let ball_start_location = prelude::Vector3::new(window_width as f32 / 2.0, window_height as f32 / 2.0, 0.0);
   ball_model_matrix.translate(ball_start_location);
   
-  let paddle_start_location = prelude::Vector3::new(32.0, window_height as f32 / 2.0, 0.0);
-  paddle_model_matrix.translate(paddle_start_location);
+  let left_paddle_start_location = prelude::Vector3::new(32.0, window_height as f32 / 2.0, 0.0);
+  left_paddle_model_matrix.translate(left_paddle_start_location);
+
+  let right_paddle_start_location = prelude::Vector3::new(window_width as f32 - 32.0, window_height as f32 / 2.0, 0.0);
+  right_paddle_model_matrix.translate(right_paddle_start_location);
 
   unsafe {
     gl::Viewport(0, 0, window_width as i32, window_height as i32);
@@ -119,7 +124,10 @@ pub fn launch() -> Result<(), String> {
     shader_program.set_model_matrix(&ball_model_matrix)?;
     ball_sprite.render();
 
-    shader_program.set_model_matrix(&paddle_model_matrix)?;
+    shader_program.set_model_matrix(&left_paddle_model_matrix)?;
+    paddle_sprite.render();
+
+    shader_program.set_model_matrix(&right_paddle_model_matrix)?;
     paddle_sprite.render();
 
     window.gl_swap_window();
