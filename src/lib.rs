@@ -1,10 +1,11 @@
-use std::{ffi::CString, fs, path::Path, time::{Duration, Instant}};
+use std::{ffi::CString, path::Path, time::{Duration, Instant}};
 use sdl2::event::Event;
 
 mod math;
 mod vertex_data;
 mod buffer_object;
 mod vertex_array;
+mod shader;
 
 mod prelude {
   pub use crate::math::Vector3;
@@ -16,9 +17,15 @@ mod prelude {
   pub use crate::buffer_object::BufferObject;
 
   pub use crate::vertex_array::VertexArray;
+
+  pub use crate::shader::Shader;
 }
 
-use prelude::{ BufferObject, VertexArray };
+use prelude::{
+  BufferObject,
+  VertexArray,
+  Shader
+};
 
 pub fn launch() -> Result<(), String> {
   let window_width = 800;
@@ -54,39 +61,22 @@ pub fn launch() -> Result<(), String> {
 
   let ball_vertex_array_object = VertexArray::textured(ball_vertex_array_buffer, ball_element_buffer_object);
   let paddle_vertex_array_object = VertexArray::textured(paddle_vertex_array_buffer, paddle_element_buffer_object);
+
+  let vertex_shader = Shader::vertex(Path::new("res/shaders/vertex_shader.glsl"))?;
+  let fragment_shader = Shader::fragment(Path::new("res/shaders/fragment_shader.glsl"))?;
   
-  let vertex_shader_source = CString::new(
-    fs::read_to_string(Path::new("res/shaders/vertex_shader.glsl")).map_err(|error| error.to_string())?
-  ).map_err(|error| error.to_string())?;
-
-  let vertex_shader = unsafe { gl::CreateShader(gl::VERTEX_SHADER) };
-  unsafe {
-    gl::ShaderSource(vertex_shader, 1, &vertex_shader_source.as_ptr(), std::ptr::null());
-    gl::CompileShader(vertex_shader);
-  }
-
-  let fragment_shader_source = CString::new(
-    fs::read_to_string(Path::new("res/shaders/fragment_shader.glsl")).map_err(|error| error.to_string())?
-  ).map_err(|error| error.to_string())?;
-
-  let fragment_shader = unsafe { gl::CreateShader(gl::FRAGMENT_SHADER) };
-  unsafe {
-    gl::ShaderSource(fragment_shader, 1, &fragment_shader_source.as_ptr(), std::ptr::null());
-    gl::CompileShader(fragment_shader);
-  }
-
   let shader_program = unsafe { gl::CreateProgram() };
   unsafe {
-    gl::AttachShader(shader_program, vertex_shader);
-    gl::AttachShader(shader_program, fragment_shader);
+    gl::AttachShader(shader_program, vertex_shader.id());
+    gl::AttachShader(shader_program, fragment_shader.id());
 
     gl::LinkProgram(shader_program);
 
-    gl::DetachShader(shader_program, vertex_shader);
-    gl::DetachShader(shader_program, fragment_shader);
+    gl::DetachShader(shader_program, vertex_shader.id());
+    gl::DetachShader(shader_program, fragment_shader.id());
 
-    gl::DeleteShader(vertex_shader);
-    gl::DeleteShader(fragment_shader);
+    gl::DeleteShader(vertex_shader.id());
+    gl::DeleteShader(fragment_shader.id());
   }
   
   let ball_image = image::open(Path::new("res/textures/ball.png")).map_err(|error| error.to_string())?;
