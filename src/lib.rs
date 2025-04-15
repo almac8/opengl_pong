@@ -6,6 +6,7 @@ mod vertex_data;
 mod buffer_object;
 mod vertex_array;
 mod shader;
+mod shader_program;
 
 mod prelude {
   pub use crate::math::Vector3;
@@ -19,12 +20,15 @@ mod prelude {
   pub use crate::vertex_array::VertexArray;
 
   pub use crate::shader::Shader;
+
+  pub use crate::shader_program::ShaderProgram;
 }
 
 use prelude::{
   BufferObject,
   VertexArray,
-  Shader
+  Shader,
+  ShaderProgram
 };
 
 pub fn launch() -> Result<(), String> {
@@ -62,22 +66,12 @@ pub fn launch() -> Result<(), String> {
   let ball_vertex_array_object = VertexArray::textured(ball_vertex_array_buffer, ball_element_buffer_object);
   let paddle_vertex_array_object = VertexArray::textured(paddle_vertex_array_buffer, paddle_element_buffer_object);
 
-  let vertex_shader = Shader::vertex(Path::new("res/shaders/vertex_shader.glsl"))?;
-  let fragment_shader = Shader::fragment(Path::new("res/shaders/fragment_shader.glsl"))?;
-  
-  let shader_program = unsafe { gl::CreateProgram() };
-  unsafe {
-    gl::AttachShader(shader_program, vertex_shader.id());
-    gl::AttachShader(shader_program, fragment_shader.id());
+  let shaders = vec![
+    Shader::vertex(Path::new("res/shaders/vertex_shader.glsl"))?,
+    Shader::fragment(Path::new("res/shaders/fragment_shader.glsl"))?
+  ];
 
-    gl::LinkProgram(shader_program);
-
-    gl::DetachShader(shader_program, vertex_shader.id());
-    gl::DetachShader(shader_program, fragment_shader.id());
-
-    gl::DeleteShader(vertex_shader.id());
-    gl::DeleteShader(fragment_shader.id());
-  }
+  let shader_program = ShaderProgram::link(shaders);
   
   let ball_image = image::open(Path::new("res/textures/ball.png")).map_err(|error| error.to_string())?;
   let mut ball_texture: gl::types::GLuint = 0;
@@ -136,18 +130,18 @@ pub fn launch() -> Result<(), String> {
   unsafe {
     gl::Viewport(0, 0, window_width as i32, window_height as i32);
     gl::ClearColor(0.2, 0.2, 0.4, 1.0);
-    gl::UseProgram(shader_program);
+    gl::UseProgram(shader_program.id());
 
     gl::Enable(gl::BLEND);
     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
   }
 
   let view_uniform_name = CString::new("view").map_err(|error| error.to_string())?;
-  let view_uniform_location = unsafe { gl::GetUniformLocation(shader_program, view_uniform_name.as_ptr()) };
+  let view_uniform_location = unsafe { gl::GetUniformLocation(shader_program.id(), view_uniform_name.as_ptr()) };
   unsafe { gl::UniformMatrix4fv(view_uniform_location, 1, gl::FALSE, view_matrix.flatten().as_ptr()); }
 
   let projection_uniform_name = CString::new("projection").map_err(|error| error.to_string())?;
-  let projection_uniform_location = unsafe { gl::GetUniformLocation(shader_program, projection_uniform_name.as_ptr()) };
+  let projection_uniform_location = unsafe { gl::GetUniformLocation(shader_program.id(), projection_uniform_name.as_ptr()) };
   unsafe { gl::UniformMatrix4fv(projection_uniform_location, 1, gl::FALSE, projection_matrix.flatten().as_ptr()); }
 
   let mut ball_velocity_x = 0.5;
@@ -177,7 +171,7 @@ pub fn launch() -> Result<(), String> {
     }
     
     let model_uniform_name = CString::new("model").map_err(|error| error.to_string())?;
-    let model_uniform_location = unsafe { gl::GetUniformLocation(shader_program, model_uniform_name.as_ptr()) };
+    let model_uniform_location = unsafe { gl::GetUniformLocation(shader_program.id(), model_uniform_name.as_ptr()) };
     
     unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, ball_model_matrix.flatten().as_ptr()); }
 
