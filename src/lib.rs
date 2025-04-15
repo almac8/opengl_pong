@@ -7,6 +7,7 @@ mod buffer_object;
 mod vertex_array;
 mod shader;
 mod shader_program;
+mod texture;
 
 mod prelude {
   pub use crate::math::Vector3;
@@ -14,21 +15,19 @@ mod prelude {
   pub use crate::math::Matrix4;
 
   pub use crate::vertex_data::generate_textured_vertex_data;
-
   pub use crate::buffer_object::BufferObject;
-
   pub use crate::vertex_array::VertexArray;
-
   pub use crate::shader::Shader;
-
   pub use crate::shader_program::ShaderProgram;
+  pub use crate::texture::Texture;
 }
 
 use prelude::{
   BufferObject,
   VertexArray,
   Shader,
-  ShaderProgram
+  ShaderProgram,
+  Texture
 };
 
 pub fn launch() -> Result<(), String> {
@@ -66,55 +65,16 @@ pub fn launch() -> Result<(), String> {
   let ball_vertex_array_object = VertexArray::textured(ball_vertex_array_buffer, ball_element_buffer_object);
   let paddle_vertex_array_object = VertexArray::textured(paddle_vertex_array_buffer, paddle_element_buffer_object);
 
-  let shaders = vec![
-    Shader::vertex(Path::new("res/shaders/vertex_shader.glsl"))?,
-    Shader::fragment(Path::new("res/shaders/fragment_shader.glsl"))?
-  ];
+  let shader_program = ShaderProgram::link(
+    vec![
+      Shader::vertex(Path::new("res/shaders/vertex_shader.glsl"))?,
+      Shader::fragment(Path::new("res/shaders/fragment_shader.glsl"))?
+    ]
+  );
 
-  let shader_program = ShaderProgram::link(shaders);
+  let ball_texture = Texture::load(Path::new("res/textures/ball.png"))?;
+  let paddle_texture = Texture::load(Path::new("res/textures/paddle.png"))?;
   
-  let ball_image = image::open(Path::new("res/textures/ball.png")).map_err(|error| error.to_string())?;
-  let mut ball_texture: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenTextures(1, &mut ball_texture);
-    gl::BindTexture(gl::TEXTURE_2D, ball_texture);
-
-    gl::TexImage2D(
-      gl::TEXTURE_2D,
-      0,
-      gl::RGBA as gl::types::GLint,
-      ball_image.width() as gl::types::GLint,
-      ball_image.height() as gl::types::GLint,
-      0,
-      gl::RGBA,
-      gl::UNSIGNED_BYTE,
-      ball_image.as_bytes().as_ptr() as *const gl::types::GLvoid
-    );
-
-    gl::GenerateMipmap(gl::TEXTURE_2D);
-  }
-
-  let paddle_image = image::open(Path::new("res/textures/paddle.png")).map_err(|error| error.to_string())?;
-  let mut paddle_texture: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenTextures(1, &mut paddle_texture);
-    gl::BindTexture(gl::TEXTURE_2D, paddle_texture);
-
-    gl::TexImage2D(
-      gl::TEXTURE_2D,
-      0,
-      gl::RGBA as gl::types::GLint,
-      paddle_image.width() as gl::types::GLint,
-      paddle_image.height() as gl::types::GLint,
-      0,
-      gl::RGBA,
-      gl::UNSIGNED_BYTE,
-      paddle_image.as_bytes().as_ptr() as *const gl::types::GLvoid
-    );
-
-    gl::GenerateMipmap(gl::TEXTURE_2D);
-  }
-
   let mut ball_model_matrix = prelude::Matrix4::identity();
   let mut paddle_model_matrix = prelude::Matrix4::identity();
 
@@ -178,7 +138,7 @@ pub fn launch() -> Result<(), String> {
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
 
-      gl::BindTexture(gl::TEXTURE_2D, ball_texture);
+      gl::BindTexture(gl::TEXTURE_2D, ball_texture.id());
       gl::BindVertexArray(ball_vertex_array_object.id());
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
@@ -187,7 +147,7 @@ pub fn launch() -> Result<(), String> {
     unsafe { gl::UniformMatrix4fv(model_uniform_location, 1, gl::FALSE, paddle_model_matrix.flatten().as_ptr()); }
 
     unsafe {
-      gl::BindTexture(gl::TEXTURE_2D, paddle_texture);
+      gl::BindTexture(gl::TEXTURE_2D, paddle_texture.id());
       gl::BindVertexArray(paddle_vertex_array_object.id());
       gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
       gl::BindVertexArray(0);
