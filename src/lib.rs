@@ -3,6 +3,7 @@ use sdl2::event::Event;
 
 mod math;
 mod vertex_data;
+mod buffer_object;
 
 mod prelude {
   pub use crate::math::Vector3;
@@ -10,7 +11,11 @@ mod prelude {
   pub use crate::math::Matrix4;
 
   pub use crate::vertex_data::generate_textured_vertex_data;
+
+  pub use crate::buffer_object::BufferObject;
 }
+
+use prelude::BufferObject;
 
 pub fn launch() -> Result<(), String> {
   let window_width = 800;
@@ -37,73 +42,19 @@ pub fn launch() -> Result<(), String> {
 
   let (ball_vertex_data, ball_element_data) = crate::prelude::generate_textured_vertex_data(16, 16);
   let (paddle_vertex_data, paddle_element_data) = crate::prelude::generate_textured_vertex_data(16, 128);
+
+  let ball_vertex_array_buffer = BufferObject::vertex_array(ball_vertex_data);
+  let paddle_vertex_array_buffer = BufferObject::vertex_array(paddle_vertex_data);
+
+  let ball_element_buffer_object = BufferObject::element_array(ball_element_data);
+  let paddle_element_buffer_object = BufferObject::element_array(paddle_element_data);
   
-  let mut ball_vertex_array_buffer: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenBuffers(1, &mut ball_vertex_array_buffer);
-    gl::BindBuffer(gl::ARRAY_BUFFER, ball_vertex_array_buffer);
-
-    gl::BufferData(
-      gl::ARRAY_BUFFER,
-      (ball_vertex_data.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-      ball_vertex_data.as_ptr() as *const gl::types::GLvoid,
-      gl::STATIC_DRAW
-    );
-
-    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-  }
-
-  let mut paddle_vertex_array_buffer: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenBuffers(1, &mut paddle_vertex_array_buffer);
-    gl::BindBuffer(gl::ARRAY_BUFFER, paddle_vertex_array_buffer);
-
-    gl::BufferData(
-      gl::ARRAY_BUFFER,
-      (paddle_vertex_data.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-      paddle_vertex_data.as_ptr() as *const gl::types::GLvoid,
-      gl::STATIC_DRAW
-    );
-
-    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-  }
-
-  let mut ball_element_buffer_object: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenBuffers(1, &mut ball_element_buffer_object);
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ball_element_buffer_object);
-
-    gl::BufferData(
-      gl::ELEMENT_ARRAY_BUFFER,
-      (ball_element_data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
-      ball_element_data.as_ptr() as *const gl::types::GLvoid,
-      gl::STATIC_DRAW
-    );
-
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
-  }
-
-  let mut paddle_element_buffer_object: gl::types::GLuint = 0;
-  unsafe {
-    gl::GenBuffers(1, &mut paddle_element_buffer_object);
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, paddle_element_buffer_object);
-
-    gl::BufferData(
-      gl::ELEMENT_ARRAY_BUFFER,
-      (paddle_element_data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
-      paddle_element_data.as_ptr() as *const gl::types::GLvoid,
-      gl::STATIC_DRAW
-    );
-
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
-  }
-
   let mut ball_vertex_array_object: gl::types::GLuint = 0;
   unsafe {
     gl::GenVertexArrays(1, &mut ball_vertex_array_object);
     gl::BindVertexArray(ball_vertex_array_object);
-    gl::BindBuffer(gl::ARRAY_BUFFER, ball_vertex_array_buffer);
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ball_element_buffer_object);
+    gl::BindBuffer(gl::ARRAY_BUFFER, ball_vertex_array_buffer.id());
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ball_element_buffer_object.id());
 
     gl::EnableVertexAttribArray(0);
     gl::VertexAttribPointer(
@@ -133,8 +84,8 @@ pub fn launch() -> Result<(), String> {
   unsafe {
     gl::GenVertexArrays(1, &mut paddle_vertex_array_object);
     gl::BindVertexArray(paddle_vertex_array_object);
-    gl::BindBuffer(gl::ARRAY_BUFFER, paddle_vertex_array_buffer);
-    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, paddle_element_buffer_object);
+    gl::BindBuffer(gl::ARRAY_BUFFER, paddle_vertex_array_buffer.id());
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, paddle_element_buffer_object.id());
 
     gl::EnableVertexAttribArray(0);
     gl::VertexAttribPointer(
