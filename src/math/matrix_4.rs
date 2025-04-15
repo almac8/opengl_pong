@@ -1,4 +1,4 @@
-use crate::prelude::{Vector3, Vector4};
+use crate::prelude::{Vector2, Vector4};
 
 pub struct Matrix4 {
   pub x: Vector4,
@@ -42,17 +42,15 @@ impl Matrix4 {
     ]
   }
   
-  pub fn translate(&mut self, translation_vector: Vector3) {
+  pub fn translate(&mut self, translation_vector: Vector2) {
     self.x.w += translation_vector.x;
     self.y.w += translation_vector.y;
-    self.z.w += translation_vector.z;
   }
 }
 
 #[cfg(test)]
 mod tests {
   use super::Matrix4;
-  use crate::prelude::Vector3;
 
   #[test]
   fn identity_constructor() {
@@ -146,10 +144,9 @@ mod tests {
   fn translation() {
     let translation_x = 32.0;
     let translation_y = 32.0;
-    let translation_z = 0.0;
 
     let mut matrix = Matrix4::identity();
-    let translation_vector = Vector3::new(translation_x, translation_y, translation_z);
+    let translation_vector = crate::prelude::Vector2::new(translation_x, translation_y);
 
     matrix.translate(translation_vector);
 
@@ -166,7 +163,7 @@ mod tests {
     assert_eq!(matrix.z.x, 0.0);
     assert_eq!(matrix.z.y, 0.0);
     assert_eq!(matrix.z.z, 1.0);
-    assert_eq!(matrix.z.w, translation_z);
+    assert_eq!(matrix.z.w, 0.0);
 
     assert_eq!(matrix.w.x, 0.0);
     assert_eq!(matrix.w.y, 0.0);

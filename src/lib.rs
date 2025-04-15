@@ -11,7 +11,7 @@ mod texture;
 mod sprite;
 
 mod prelude {
-  pub use crate::math::Vector3;
+  pub use crate::math::Vector2;
   pub use crate::math::Vector4;
   pub use crate::math::Matrix4;
   pub use crate::vertex_data::generate_textured_vertex_data;
@@ -24,6 +24,7 @@ mod prelude {
 }
 
 use prelude::{
+  Vector2,
   Matrix4,
   Shader,
   ShaderProgram,
@@ -70,13 +71,13 @@ pub fn launch() -> Result<(), String> {
   let view_matrix = prelude::Matrix4::identity();
   let projection_matrix = prelude::Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
 
-  let ball_start_location = prelude::Vector3::new(window_width as f32 / 2.0, window_height as f32 / 2.0, 0.0);
+  let ball_start_location = prelude::Vector2::new(window_width as f32 / 2.0, window_height as f32 / 2.0);
   ball_model_matrix.translate(ball_start_location);
   
-  let left_paddle_start_location = prelude::Vector3::new(32.0, window_height as f32 / 2.0, 0.0);
+  let left_paddle_start_location = prelude::Vector2::new(32.0, window_height as f32 / 2.0);
   left_paddle_model_matrix.translate(left_paddle_start_location);
 
-  let right_paddle_start_location = prelude::Vector3::new(window_width as f32 - 32.0, window_height as f32 / 2.0, 0.0);
+  let right_paddle_start_location = prelude::Vector2::new(window_width as f32 - 32.0, window_height as f32 / 2.0);
   right_paddle_model_matrix.translate(right_paddle_start_location);
 
   unsafe {
@@ -106,7 +107,7 @@ pub fn launch() -> Result<(), String> {
     }
 
     let deltamillis = deltatime.as_millis() as f32;
-    let translation_vector = prelude::Vector3::new(ball_velocity_x * deltamillis, ball_velocity_y * deltamillis, 0.0);
+    let translation_vector = Vector2::new(ball_velocity_x * deltamillis, ball_velocity_y * deltamillis);
     ball_model_matrix.translate(translation_vector);
 
     if ball_model_matrix.x.w >= window_width as f32 || ball_model_matrix.x.w <= 0.0 {
