@@ -2,11 +2,14 @@ use std::{ffi::CString, fs, path::Path, time::{Duration, Instant}};
 use sdl2::event::Event;
 
 mod math;
+mod vertex_data;
 
 mod prelude {
   pub use crate::math::Vector3;
   pub use crate::math::Vector4;
   pub use crate::math::Matrix4;
+
+  pub use crate::vertex_data::generate_textured_vertex_data;
 }
 
 pub fn launch() -> Result<(), String> {
@@ -32,20 +35,9 @@ pub fn launch() -> Result<(), String> {
 
   let mut is_running = true;
 
-  let ball_vertices: Vec<f32> = vec![
-    -8.0,  8.0,  0.0, 0.0,
-     8.0,  8.0,  1.0, 0.0,
-     8.0, -8.0,  1.0, 1.0,
-    -8.0, -8.0,  0.0, 1.0
-  ];
-
-  let paddle_vertices: Vec<f32> = vec![
-    -8.0,  64.0,   0.0, 0.0,
-     8.0,  64.0,   1.0, 0.0,
-     8.0, -64.0,   1.0, 1.0,
-    -8.0, -64.0,   0.0, 1.0
-  ];
-
+  let (ball_vertex_data, ball_element_data) = crate::prelude::generate_textured_vertex_data(16, 16);
+  let (paddle_vertex_data, paddle_element_data) = crate::prelude::generate_textured_vertex_data(16, 128);
+  
   let mut ball_vertex_array_buffer: gl::types::GLuint = 0;
   unsafe {
     gl::GenBuffers(1, &mut ball_vertex_array_buffer);
@@ -53,8 +45,8 @@ pub fn launch() -> Result<(), String> {
 
     gl::BufferData(
       gl::ARRAY_BUFFER,
-      (ball_vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-      ball_vertices.as_ptr() as *const gl::types::GLvoid,
+      (ball_vertex_data.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+      ball_vertex_data.as_ptr() as *const gl::types::GLvoid,
       gl::STATIC_DRAW
     );
 
@@ -68,23 +60,13 @@ pub fn launch() -> Result<(), String> {
 
     gl::BufferData(
       gl::ARRAY_BUFFER,
-      (paddle_vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-      paddle_vertices.as_ptr() as *const gl::types::GLvoid,
+      (paddle_vertex_data.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+      paddle_vertex_data.as_ptr() as *const gl::types::GLvoid,
       gl::STATIC_DRAW
     );
 
     gl::BindBuffer(gl::ARRAY_BUFFER, 0);
   }
-
-  let ball_element_data: Vec<i32> = vec![
-    0, 1, 2,
-    0, 2, 3
-  ];
-
-  let paddle_element_data: Vec<i32> = vec![
-    0, 1, 2,
-    0, 2, 3
-  ];
 
   let mut ball_element_buffer_object: gl::types::GLuint = 0;
   unsafe {
@@ -268,7 +250,7 @@ pub fn launch() -> Result<(), String> {
 
   unsafe {
     gl::Viewport(0, 0, window_width as i32, window_height as i32);
-    gl::ClearColor(1.0, 0.5, 1.0, 1.0);
+    gl::ClearColor(0.2, 0.2, 0.4, 1.0);
     gl::UseProgram(shader_program);
 
     gl::Enable(gl::BLEND);
