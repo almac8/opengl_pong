@@ -287,8 +287,11 @@ pub fn launch() -> Result<(), String> {
     let frame_max_duration = Duration::from_secs(1) / target_fps;
     let end_time = Instant::now();
     let frame_duration = end_time - previous_time;
-    let time_left = frame_max_duration - frame_duration;
-    std::thread::sleep(time_left);
+
+    if frame_duration.as_millis() < frame_max_duration.as_millis() {
+      let time_left = frame_max_duration - frame_duration;
+      std::thread::sleep(time_left);
+    }
   }
 
   Ok(())
