@@ -79,7 +79,7 @@ pub fn launch() -> Result<(), String> {
   
   let mut ball_location = Location::at(window_width as f32 / 2.0, window_height as f32 / 2.0);
   let mut left_paddle_location = Location::at(32.0, window_height as f32 / 2.0);
-  let right_paddle_location = Location::at(window_width as f32 - 32.0, window_height as f32 / 2.0);
+  let mut right_paddle_location = Location::at(window_width as f32 - 32.0, window_height as f32 / 2.0);
 
   let view_matrix = prelude::Matrix4::identity();
   let projection_matrix = prelude::Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
@@ -262,6 +262,50 @@ pub fn launch() -> Result<(), String> {
             ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
             ball_velocity_y *= -1.0;
           }
+        }
+      },
+
+      None => {}
+    }
+
+    collision = find_collision(&left_paddle_collider, &top_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Bottom {
+          left_paddle_location.translate(Vector2::new(0.0, collision.penetration_depth()));
+        }
+      },
+
+      None => {}
+    }
+
+    collision = find_collision(&left_paddle_collider, &bottom_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Top {
+          left_paddle_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
+        }
+      },
+
+      None => {}
+    }
+
+    collision = find_collision(&right_paddle_collider, &top_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Bottom {
+          right_paddle_location.translate(Vector2::new(0.0, collision.penetration_depth()));
+        }
+      },
+
+      None => {}
+    }
+
+    collision = find_collision(&right_paddle_collider, &bottom_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Top {
+          right_paddle_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
         }
       },
 
