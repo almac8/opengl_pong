@@ -1,5 +1,6 @@
 use crate::prelude::{Matrix4, Vector2};
 
+#[derive(Clone, Copy)]
 pub struct Location {
   x: f32,
   y: f32,

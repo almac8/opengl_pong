@@ -10,6 +10,10 @@ mod shader_program;
 mod texture;
 mod sprite;
 mod location;
+mod collider;
+mod collision;
+mod collision_direction;
+mod collision_system;
 
 mod prelude {
   pub use crate::math::Vector2;
@@ -23,6 +27,10 @@ mod prelude {
   pub use crate::texture::Texture;
   pub use crate::sprite::Sprite;
   pub use crate::location::Location;
+  pub use crate::collider::Collider;
+  pub use crate::collision::Collision;
+  pub use crate::collision_direction::CollisionDirection;
+  pub use crate::collision_system::find_collision;
 }
 
 use prelude::{
@@ -30,7 +38,10 @@ use prelude::{
   Shader,
   ShaderProgram,
   Sprite,
-  Location
+  Location,
+  Collider,
+  CollisionDirection,
+  find_collision
 };
 
 pub fn launch() -> Result<(), String> {
@@ -85,9 +96,17 @@ pub fn launch() -> Result<(), String> {
   shader_program.set_view_matrix(&view_matrix)?;
   shader_program.set_projection_matrix(&projection_matrix)?;
 
-  let mut ball_velocity_x = 0.5;
-  let mut ball_velocity_y = 0.5;
+  let mut ball_velocity_x = 0.1;
+  let mut ball_velocity_y = 0.1;
   let mut left_paddle_velocity = 0.0;
+
+  let barrier_thickness = 8.0;
+
+  let mut ball_collider = Collider::new(ball_location.x() as f32, ball_location.y() as f32, 16.0, 16.0);
+  let left_barrier_collider = Collider::new(0.0, (window_height / 2) as f32, barrier_thickness, window_height as f32);
+  let right_barrier_collider = Collider::new(window_width as f32, (window_height / 2) as f32, barrier_thickness, window_height as f32);
+  let top_barrier_collider = Collider::new((window_width / 2) as f32, 0.0, window_width as f32, barrier_thickness);
+  let bottom_barrier_collider = Collider::new((window_width / 2) as f32, window_height as f32, window_width as f32, barrier_thickness);
 
   let mut current_time = Instant::now();
   let mut previous_time = current_time;
@@ -130,13 +149,60 @@ pub fn launch() -> Result<(), String> {
       ball_velocity_y * deltamillis
     ));
 
-    if ball_location.x() >= window_width as f32 || ball_location.x() <= 0.0 { ball_velocity_x *= -1.0; }
-    if ball_location.y() >= window_height as f32 || ball_location.y() <= 0.0 { ball_velocity_y *= -1.0; }
-
     left_paddle_location.translate(Vector2::new(
       0.0,
       left_paddle_velocity * deltamillis
     ));
+
+    ball_collider.set_location(&ball_location);
+
+    let mut collision = find_collision(&ball_collider, &left_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Right {
+          ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
+          ball_velocity_x *= -1.0;
+        }
+      },
+
+      None => {}
+    }
+
+    collision = find_collision(&ball_collider, &right_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Left {
+          ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
+          ball_velocity_x *= -1.0;
+        }
+      },
+
+      None => {}
+    }
+
+    collision = find_collision(&ball_collider, &top_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Bottom {
+          ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
+          ball_velocity_y *= -1.0;
+        }
+      },
+
+      None => {}
+    }
+
+    collision = find_collision(&ball_collider, &bottom_barrier_collider);
+    match collision {
+      Some(collision) => {
+        if collision.entry_direction() == CollisionDirection::Top {
+          ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
+          ball_velocity_y *= -1.0;
+        }
+      },
+
+      None => {}
+    }
 
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);

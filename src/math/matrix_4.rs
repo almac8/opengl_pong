@@ -1,5 +1,6 @@
 use crate::prelude::Vector4;
 
+#[derive(Clone, Copy)]
 pub struct Matrix4 {
   pub x: Vector4,
   pub y: Vector4,
