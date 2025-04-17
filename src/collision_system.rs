@@ -1,6 +1,6 @@
 use crate::prelude::{Collider, Collision, CollisionDirection};
 
-pub fn find_collision(primary: &Collider, secondary: &Collider) -> Option<Collision> {
+pub fn find_collision(primary_index: usize, secondary_index: usize, primary: &Collider, secondary: &Collider) -> Option<Collision> {
   let primary_left = primary.location().x() - (primary.width() / 2.0);
   let primary_right = primary.location().x() + (primary.width() / 2.0);
   let primary_top = primary.location().y() - (primary.height() / 2.0);
@@ -29,7 +29,41 @@ pub fn find_collision(primary: &Collider, secondary: &Collider) -> Option<Collis
     let final_overlap = if horizontal_overlap < vertical_overlap { horizontal_overlap } else { vertical_overlap };
     let final_direction = if horizontal_overlap < vertical_overlap { horizontal_direction } else { vertical_direction };
 
-    return Some(Collision::new(final_direction, final_overlap));
+    return Some(Collision::new(primary_index, secondary_index, final_direction, final_overlap));
+  }
+
+  None
+}
+
+pub fn find_collisions(colliders: &Vec<Collider>) -> Option<Vec<Collision>> {
+  let mut collisions: Vec<Collision> = vec![];
+
+  let mut primary_index = 0;
+  let mut secondary_index = 0;
+
+  for primary in colliders {
+    for secondary in colliders {
+      if primary_index != secondary_index {
+        let collision = find_collision(primary_index, secondary_index, primary, secondary);
+        
+        match collision {
+          Some(collision) => {
+            collisions.push(collision);
+          },
+          
+          None => {}
+        }
+      }
+
+      secondary_index += 1;
+    }
+    
+    secondary_index = 0;
+    primary_index += 1;
+  }
+
+  if collisions.len() > 0 {
+    return Some(collisions);
   }
 
   None
@@ -44,7 +78,7 @@ mod tests {
     let primary_collider = Collider::new(-64.0, 0.0, 32.0, 32.0);
     let secondary_collider = Collider::new(0.0, 0.0, 64.0, 64.0);
 
-    let collision = find_collision(&primary_collider, &secondary_collider);
+    let collision = find_collision(0, 1, &primary_collider, &secondary_collider);
 
     assert!(collision.is_none());
   }
@@ -54,7 +88,7 @@ mod tests {
     let primary_collider = Collider::new(-32.0, 0.0, 32.0, 32.0);
     let secondary_collider = Collider::new(0.0, 0.0, 64.0, 64.0);
 
-    let collision = find_collision(&primary_collider, &secondary_collider);
+    let collision = find_collision(0, 1, &primary_collider, &secondary_collider);
     
     match collision {
       Some(collision) => {
@@ -71,7 +105,7 @@ mod tests {
     let primary_collider = Collider::new(32.0, 0.0, 32.0, 32.0);
     let secondary_collider = Collider::new(0.0, 0.0, 64.0, 64.0);
 
-    let collision = find_collision(&primary_collider, &secondary_collider);
+    let collision = find_collision(0, 1, &primary_collider, &secondary_collider);
     
     match collision {
       Some(collision) => {
@@ -88,7 +122,7 @@ mod tests {
     let primary_collider = Collider::new(0.0, -32.0, 32.0, 32.0);
     let secondary_collider = Collider::new(0.0, 0.0, 64.0, 64.0);
 
-    let collision = find_collision(&primary_collider, &secondary_collider);
+    let collision = find_collision(0, 0, &primary_collider, &secondary_collider);
     
     match collision {
       Some(collision) => {
@@ -105,7 +139,7 @@ mod tests {
     let primary_collider = Collider::new(0.0, 32.0, 32.0, 32.0);
     let secondary_collider = Collider::new(0.0, 0.0, 64.0, 64.0);
 
-    let collision = find_collision(&primary_collider, &secondary_collider);
+    let collision = find_collision(0, 0, &primary_collider, &secondary_collider);
     
     match collision {
       Some(collision) => {
@@ -114,6 +148,46 @@ mod tests {
       },
 
       None => panic!("No Collision Detected")
+    }
+  }
+
+  #[test]
+  fn multiple_collisions() {
+    let colliders = vec![
+      Collider::new(0.0, 0.0, 32.0, 32.0),
+      Collider::new(0.0, -64.0, 32.0, 32.0),
+      Collider::new(-16.0, 0.0, 32.0, 32.0),
+      Collider::new(16.0, 0.0, 32.0, 32.0)
+    ];
+
+    let collisions = find_collisions(&colliders);
+
+    match collisions {
+      Some(collisions) => {
+        assert_eq!(collisions.len(), 4);
+        
+        assert_eq!(collisions[0].primary_index(), 0);
+        assert_eq!(collisions[0].secondary_index(), 2);
+        assert_eq!(collisions[0].entry_direction(), CollisionDirection::Right);
+        assert_eq!(collisions[0].penetration_depth(), 16.0);
+
+        assert_eq!(collisions[1].primary_index(), 0);
+        assert_eq!(collisions[1].secondary_index(), 3);
+        assert_eq!(collisions[1].entry_direction(), CollisionDirection::Left);
+        assert_eq!(collisions[1].penetration_depth(), 16.0);
+
+        assert_eq!(collisions[2].primary_index(), 2);
+        assert_eq!(collisions[2].secondary_index(), 0);
+        assert_eq!(collisions[2].entry_direction(), CollisionDirection::Left);
+        assert_eq!(collisions[2].penetration_depth(), 16.0);
+
+        assert_eq!(collisions[3].primary_index(), 3);
+        assert_eq!(collisions[3].secondary_index(), 0);
+        assert_eq!(collisions[3].entry_direction(), CollisionDirection::Right);
+        assert_eq!(collisions[3].penetration_depth(), 16.0);
+      },
+
+      None => panic!("No Collisions Detected")
     }
   }
 }
