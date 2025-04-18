@@ -92,6 +92,7 @@ pub fn launch() -> Result<(), String> {
   let mut ball_velocity_x = 0.5;
   let mut ball_velocity_y = 0.5;
   let mut left_paddle_velocity = 0.0;
+  let mut right_paddle_velocity = 0.0;
   
   let barrier_thickness = 8.0;
   
@@ -154,6 +155,18 @@ pub fn launch() -> Result<(), String> {
       }
     }
     
+    if ball_velocity_x < 0.0 {
+      right_paddle_velocity = 0.0;
+    } else {
+      if right_paddle_location.y() < ball_location.y() {
+        right_paddle_velocity = 0.5;
+      }
+
+      if right_paddle_location.y() > ball_location.y() {
+        right_paddle_velocity = -0.5;
+      }
+    }
+    
     ball_location.translate(Vector2::new(
       ball_velocity_x * deltamillis,
       ball_velocity_y * deltamillis
@@ -162,6 +175,11 @@ pub fn launch() -> Result<(), String> {
     left_paddle_location.translate(Vector2::new(
       0.0,
       left_paddle_velocity * deltamillis
+    ));
+
+    right_paddle_location.translate(Vector2::new(
+      0.0,
+      right_paddle_velocity * deltamillis
     ));
 
     colliders[ball_collider_index].set_location(&ball_location);
