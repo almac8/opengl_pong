@@ -220,17 +220,28 @@ pub fn launch() -> Result<(), String> {
 
                 CollisionDirection::Right => {
                   ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
-                  ball_velocity_x *= -1.0;
+
+                  let signed_offset = left_paddle_location.y() - ball_location.y();
+                  let unsigned_offset = if signed_offset > 0.0 { signed_offset } else { signed_offset * -1.0 };
+                  let ratio = unsigned_offset / 64.0;
+
+                  let final_y = ratio / 2.0;
+                  let final_x = 0.5 - final_y;
+
+                  ball_velocity_x = final_x;
+                  ball_velocity_y = if signed_offset > 0.0 { final_y * -1.0 } else { final_y };
                 },
 
                 CollisionDirection::Top => {
                   ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
-                  ball_velocity_x *= -1.0;
+                  ball_velocity_y *= -1.0;
+                  ball_velocity_x = 0.5;
                 },
 
                 CollisionDirection::Bottom => {
                   ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
-                  ball_velocity_x *= -1.0;
+                  ball_velocity_y *= -1.0;
+                  ball_velocity_x = 0.5;
                 }
               }
             }
@@ -249,12 +260,12 @@ pub fn launch() -> Result<(), String> {
 
                 CollisionDirection::Top => {
                   ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
-                  ball_velocity_x *= -1.0;
+                  ball_velocity_y *= -1.0;
                 },
 
                 CollisionDirection::Bottom => {
                   ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
-                  ball_velocity_x *= -1.0;
+                  ball_velocity_y *= -1.0;
                 }
               }
             }
@@ -313,4 +324,3 @@ pub fn launch() -> Result<(), String> {
 
   Ok(())
 }
-//  343
