@@ -16,6 +16,9 @@ mod collision_direction;
 mod collision_system;
 
 mod prelude {
+  pub const WINDOW_WIDTH: u32 = 800;
+  pub const WINDOW_HEIGHT: u32 = 600;
+
   pub use crate::math::Vector2;
   pub use crate::math::Vector4;
   pub use crate::math::Matrix4;
@@ -34,13 +37,20 @@ mod prelude {
 }
 
 use prelude::{
-  find_collisions, Collider, CollisionDirection, Location, Shader, ShaderProgram, Sprite, Vector2
+  WINDOW_WIDTH,
+  WINDOW_HEIGHT,
+  find_collisions,
+  Collider,
+  CollisionDirection,
+  Location,
+  Shader,
+  ShaderProgram,
+  Sprite,
+  Vector2,
+  Matrix4
 };
 
 pub fn launch() -> Result<(), String> {
-  let window_width = 800;
-  let window_height = 600;
-
   let sdl_context = sdl2::init()?;
   let video_subsystem = sdl_context.video()?;
   let mut event_pump = sdl_context.event_pump()?;
@@ -50,7 +60,7 @@ pub fn launch() -> Result<(), String> {
   gl_attr.set_context_version(3, 3);
 
   let window = video_subsystem
-    .window("Pong", window_width, window_height)
+    .window("Pong", WINDOW_WIDTH, WINDOW_HEIGHT)
     .opengl()
     .build()
     .map_err(|error| error.to_string())?;
@@ -70,15 +80,15 @@ pub fn launch() -> Result<(), String> {
     ]
   );
   
-  let mut ball_location = Location::at(window_width as f32 / 2.0, window_height as f32 / 2.0);
-  let mut left_paddle_location = Location::at(32.0, window_height as f32 / 2.0);
-  let mut right_paddle_location = Location::at(window_width as f32 - 32.0, window_height as f32 / 2.0);
+  let mut ball_location = Location::at(WINDOW_WIDTH as f32 / 2.0, WINDOW_HEIGHT as f32 / 2.0);
+  let mut left_paddle_location = Location::at(32.0, WINDOW_HEIGHT as f32 / 2.0);
+  let mut right_paddle_location = Location::at(WINDOW_WIDTH as f32 - 32.0, WINDOW_HEIGHT as f32 / 2.0);
 
-  let view_matrix = prelude::Matrix4::identity();
-  let projection_matrix = prelude::Matrix4::orthographic(0.0, window_width as f32, window_height as f32, 0.0, -1.0, 1.0);
+  let view_matrix = Matrix4::identity();
+  let projection_matrix = Matrix4::orthographic(0.0, WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32, 0.0, -1.0, 1.0);
 
   unsafe {
-    gl::Viewport(0, 0, window_width as i32, window_height as i32);
+    gl::Viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
     gl::ClearColor(0.2, 0.2, 0.4, 1.0);
     gl::UseProgram(shader_program.id());
 
@@ -108,16 +118,16 @@ pub fn launch() -> Result<(), String> {
   colliders.push(Collider::new(right_paddle_location.x(), right_paddle_location.y(), 16.0, 128.0));
   
   let left_barrier_collider_index = colliders.len();
-  colliders.push(Collider::new(0.0, (window_height / 2) as f32, barrier_thickness, window_height as f32));
+  colliders.push(Collider::new(0.0, (WINDOW_HEIGHT / 2) as f32, barrier_thickness, WINDOW_HEIGHT as f32));
   
   let right_barrier_collider_index = colliders.len();
-  colliders.push(Collider::new(window_width as f32, (window_height / 2) as f32, barrier_thickness, window_height as f32));
+  colliders.push(Collider::new(WINDOW_WIDTH as f32, (WINDOW_HEIGHT / 2) as f32, barrier_thickness, WINDOW_HEIGHT as f32));
   
   let top_barrier_collider_index = colliders.len();
-  colliders.push(Collider::new((window_width / 2) as f32, 0.0, window_width as f32, barrier_thickness));
+  colliders.push(Collider::new((WINDOW_WIDTH / 2) as f32, 0.0, WINDOW_WIDTH as f32, barrier_thickness));
   
   let bottom_barrier_collider_index = colliders.len();
-  colliders.push(Collider::new((window_width / 2) as f32, window_height as f32, window_width as f32, barrier_thickness));
+  colliders.push(Collider::new((WINDOW_WIDTH / 2) as f32, WINDOW_HEIGHT as f32, WINDOW_WIDTH as f32, barrier_thickness));
 
   let mut current_time = Instant::now();
   let mut previous_time = current_time;
