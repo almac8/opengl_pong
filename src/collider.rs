@@ -9,7 +9,7 @@ pub struct Collider {
 impl Collider {
   pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
     Self {
-      location: Location::at(x, y),
+      location: Location::new(x, y),
       width,
       height
     }

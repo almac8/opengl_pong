@@ -80,9 +80,9 @@ pub fn launch() -> Result<(), String> {
     ]
   );
   
-  let mut ball_location = Location::at(WINDOW_WIDTH as f32 / 2.0, WINDOW_HEIGHT as f32 / 2.0);
-  let mut left_paddle_location = Location::at(32.0, WINDOW_HEIGHT as f32 / 2.0);
-  let mut right_paddle_location = Location::at(WINDOW_WIDTH as f32 - 32.0, WINDOW_HEIGHT as f32 / 2.0);
+  let mut ball_location = Location::new(WINDOW_WIDTH as f32 / 2.0, WINDOW_HEIGHT as f32 / 2.0);
+  let mut left_paddle_location = Location::new(32.0, WINDOW_HEIGHT as f32 / 2.0);
+  let mut right_paddle_location = Location::new(WINDOW_WIDTH as f32 - 32.0, WINDOW_HEIGHT as f32 / 2.0);
 
   let view_matrix = Matrix4::identity();
   let projection_matrix = Matrix4::orthographic(0.0, WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32, 0.0, -1.0, 1.0);

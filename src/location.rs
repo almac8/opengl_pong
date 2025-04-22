@@ -8,7 +8,7 @@ pub struct Location {
 }
 
 impl Location {
-  pub fn at(x: f32, y: f32) -> Self {
+  pub fn new(x: f32, y: f32) -> Self {
     let mut matrix = Matrix4::identity();
 
     matrix.x.w = x;
@@ -51,7 +51,7 @@ mod tests {
     let location_x = 32.0;
     let location_y = 64.0;
 
-    let location = Location::at(location_x, location_y);
+    let location = Location::new(location_x, location_y);
 
     assert_eq!(location.x, location_x);
     assert_eq!(location.y, location_y);
@@ -85,7 +85,7 @@ mod tests {
     let translation_y = 64.0;
     let translation_vector = Vector2::new(translation_x, translation_y);
 
-    let mut location = Location::at(location_x, location_y);
+    let mut location = Location::new(location_x, location_y);
 
     assert_eq!(location.x, location_x);
     assert_eq!(location.y, location_y);
