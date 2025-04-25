@@ -101,7 +101,8 @@ pub fn launch() -> Result<(), String> {
 
   shader_program.set_view_matrix(&view_matrix)?;
   shader_program.set_projection_matrix(&projection_matrix)?;
-
+  
+  let ball_speed = 0.5;
   let mut ball_velocity = Vector2::new(0.5, 0.5);
   let mut left_paddle_velocity = Vector2::new(0.0, 0.0);
   let mut right_paddle_velocity = Vector2::new(0.0, 0.0);
@@ -179,7 +180,7 @@ pub fn launch() -> Result<(), String> {
       }
     }
 
-    let ball_translation = ball_velocity * deltamillis;
+    let ball_translation = ball_velocity.normalized() * ball_speed * deltamillis;
     ball_location.translate(ball_translation);
 
     let left_paddle_translation = left_paddle_velocity * deltamillis;
