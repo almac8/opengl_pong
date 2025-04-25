@@ -1,4 +1,4 @@
-use std::{path::Path, time::{Duration, Instant}};
+use std::{path::Path, time::Instant};
 use sdl2::{event::Event, keyboard::Keycode};
 
 mod math;
@@ -14,6 +14,7 @@ mod collider;
 mod collision;
 mod collision_direction;
 mod collision_system;
+mod frame_limiter;
 
 mod prelude {
   pub const WINDOW_WIDTH: u32 = 800;
@@ -34,12 +35,14 @@ mod prelude {
   pub use crate::collision::Collision;
   pub use crate::collision_direction::CollisionDirection;
   pub use crate::collision_system::find_collisions;
+  pub use crate::frame_limiter::limit_frame_rate;
 }
 
 use prelude::{
   WINDOW_WIDTH,
   WINDOW_HEIGHT,
   find_collisions,
+  limit_frame_rate,
   Collider,
   CollisionDirection,
   Location,
@@ -313,16 +316,8 @@ pub fn launch() -> Result<(), String> {
     paddle_sprite.render();
 
     window.gl_swap_window();
-
-    let target_fps = 60;
-    let frame_max_duration = Duration::from_secs(1) / target_fps;
-    let end_time = Instant::now();
-    let frame_duration = end_time - previous_time;
-
-    if frame_duration.as_millis() < frame_max_duration.as_millis() {
-      let time_left = frame_max_duration - frame_duration;
-      std::thread::sleep(time_left);
-    }
+    
+    limit_frame_rate(previous_time, 60);
   }
 
   Ok(())
