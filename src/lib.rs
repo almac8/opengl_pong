@@ -73,6 +73,7 @@ pub fn launch() -> Result<(), String> {
 
   let mut is_running = true;
 
+  let power_up_sprite = Sprite::new(Path::new("res/textures/power_up.png"), 16, 16)?;
   let ball_sprite = Sprite::new(Path::new("res/textures/ball.png"), 16, 16)?;
   let paddle_sprite = Sprite::new(Path::new("res/textures/paddle.png"), 16, 128)?;
 
@@ -83,6 +84,7 @@ pub fn launch() -> Result<(), String> {
     ]
   );
   
+  let power_up_location = Location::new(WINDOW_WIDTH as f32 / 4.0, WINDOW_HEIGHT as f32 / 4.0);
   let mut ball_location = Location::new(WINDOW_WIDTH as f32 / 2.0, WINDOW_HEIGHT as f32 / 2.0);
   let mut left_paddle_location = Location::new(32.0, WINDOW_HEIGHT as f32 / 2.0);
   let mut right_paddle_location = Location::new(WINDOW_WIDTH as f32 - 32.0, WINDOW_HEIGHT as f32 / 2.0);
@@ -306,7 +308,10 @@ pub fn launch() -> Result<(), String> {
     unsafe {
       gl::Clear(gl::COLOR_BUFFER_BIT);
     }
-    
+
+    shader_program.set_model_matrix(power_up_location.matrix())?;
+    power_up_sprite.render();
+
     shader_program.set_model_matrix(ball_location.matrix())?;
     ball_sprite.render();
     
