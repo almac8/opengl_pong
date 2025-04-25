@@ -50,7 +50,7 @@ impl BufferObject {
 impl Drop for BufferObject {
   fn drop(&mut self) {
     unsafe {
-      gl::DeleteBuffers(1, &mut self.id);
+      gl::DeleteBuffers(1, &self.id);
     }
   }
 }

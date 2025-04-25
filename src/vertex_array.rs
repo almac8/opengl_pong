@@ -57,7 +57,7 @@ impl VertexArray {
 impl Drop for VertexArray {
   fn drop(&mut self) {
     unsafe {
-      gl::DeleteVertexArrays(1, &mut self.id);
+      gl::DeleteVertexArrays(1, &self.id);
     }
   }
 }
