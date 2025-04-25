@@ -1,4 +1,8 @@
-use crate::prelude::{Collider, Collision, CollisionDirection};
+use crate::prelude::{
+  Collider,
+  Collision,
+  CollisionDirection
+};
 
 pub fn find_collision(primary_index: usize, secondary_index: usize, primary: &Collider, secondary: &Collider) -> Option<Collision> {
   let primary_left = primary.location().x() - (primary.width() / 2.0);
@@ -35,37 +39,25 @@ pub fn find_collision(primary_index: usize, secondary_index: usize, primary: &Co
   None
 }
 
-pub fn find_collisions(colliders: &Vec<Collider>) -> Option<Vec<Collision>> {
+pub fn find_collisions(colliders: &[Collider]) -> Option<Vec<Collision>> {
   let mut collisions: Vec<Collision> = vec![];
 
-  let mut primary_index = 0;
-  let mut secondary_index = 0;
-
-  for primary in colliders {
-    for secondary in colliders {
+  for (primary_index, primary) in colliders.iter().enumerate() {
+    for (secondary_index, secondary) in colliders.iter().enumerate() {
       if primary_index != secondary_index {
         let collision = find_collision(primary_index, secondary_index, primary, secondary);
-        
-        match collision {
-          Some(collision) => {
-            collisions.push(collision);
-          },
-          
-          None => {}
+
+        if let Some(collision) = collision {
+          collisions.push(collision);
         }
       }
-
-      secondary_index += 1;
     }
-    
-    secondary_index = 0;
-    primary_index += 1;
   }
 
-  if collisions.len() > 0 {
+  if !collisions.is_empty() {
     return Some(collisions);
   }
-
+  
   None
 }
 
