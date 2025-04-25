@@ -84,7 +84,14 @@ pub fn launch() -> Result<(), String> {
     ]
   );
   
-  let power_up_location = Location::new(WINDOW_WIDTH as f32 / 4.0, WINDOW_HEIGHT as f32 / 4.0);
+  //  let power_up_location = Location::new(WINDOW_WIDTH as f32 / 4.0, WINDOW_HEIGHT as f32 / 4.0);
+  let mut power_up_locations = vec![
+    Location::new(WINDOW_WIDTH as f32 / 4.0, (WINDOW_HEIGHT as f32 / 4.0) * 3.0),
+    Location::new((WINDOW_WIDTH as f32 / 4.0) * 3.0, (WINDOW_HEIGHT as f32 / 4.0) * 3.0),
+    Location::new((WINDOW_WIDTH as f32 / 4.0) * 3.0, WINDOW_HEIGHT as f32 / 4.0),
+    Location::new(WINDOW_WIDTH as f32 / 4.0, WINDOW_HEIGHT as f32 / 4.0)
+  ];
+
   let mut ball_location = Location::new(WINDOW_WIDTH as f32 / 2.0, WINDOW_HEIGHT as f32 / 2.0);
   let mut left_paddle_location = Location::new(32.0, WINDOW_HEIGHT as f32 / 2.0);
   let mut right_paddle_location = Location::new(WINDOW_WIDTH as f32 - 32.0, WINDOW_HEIGHT as f32 / 2.0);
@@ -112,6 +119,12 @@ pub fn launch() -> Result<(), String> {
   let barrier_thickness = 8.0;
   
   let mut colliders = vec![];
+
+  let mut power_up_collider_indices = vec![];
+  for power_up_location in &power_up_locations {
+    power_up_collider_indices.push(colliders.len());
+    colliders.push(Collider::new(power_up_location.x(), power_up_location.y(), 16.0, 16.0));
+  }
 
   let ball_collider_index = colliders.len();
   colliders.push(Collider::new(ball_location.x(), ball_location.y(), 16.0, 16.0));
@@ -277,6 +290,18 @@ pub fn launch() -> Result<(), String> {
               }
             }
           }
+
+          for power_up_collider_index in &power_up_collider_indices {
+            if collision.secondary_index() == *power_up_collider_index {
+              let index = collision.secondary_index();
+
+              power_up_locations[index].translate(
+                Vector2::new(-(WINDOW_WIDTH as f32), -(WINDOW_HEIGHT as f32))
+              );
+
+              colliders[index].set_location(&power_up_locations[index]);
+            }
+          }
         }
 
         if collision.primary_index() == left_paddle_collider_index {
@@ -305,8 +330,11 @@ pub fn launch() -> Result<(), String> {
       gl::Clear(gl::COLOR_BUFFER_BIT);
     }
 
-    shader_program.set_model_matrix(power_up_location.matrix())?;
-    power_up_sprite.render();
+    for power_up_location in &power_up_locations {
+      shader_program.set_model_matrix(power_up_location.matrix())?;
+      power_up_sprite.render();
+    }
+
 
     shader_program.set_model_matrix(ball_location.matrix())?;
     ball_sprite.render();
