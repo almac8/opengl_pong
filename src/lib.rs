@@ -69,7 +69,7 @@ pub fn launch() -> Result<(), String> {
     .map_err(|error| error.to_string())?;
 
   let _gl_context = window.gl_create_context()?;
-  let _gl = gl::load_with(|procname| video_subsystem.gl_get_proc_address(procname) as *const gl::types::GLvoid);
+  gl::load_with(|procname| video_subsystem.gl_get_proc_address(procname) as *const gl::types::GLvoid);
 
   let mut is_running = true;
 
@@ -114,7 +114,7 @@ pub fn launch() -> Result<(), String> {
   let mut colliders = vec![];
 
   let ball_collider_index = colliders.len();
-  colliders.push(Collider::new(ball_location.x() as f32, ball_location.y() as f32, 16.0, 16.0));
+  colliders.push(Collider::new(ball_location.x(), ball_location.y(), 16.0, 16.0));
 
   let left_paddle_collider_index = colliders.len();
   colliders.push(Collider::new(left_paddle_location.x(), left_paddle_location.y(), 16.0, 128.0));
@@ -196,113 +196,109 @@ pub fn launch() -> Result<(), String> {
     colliders[right_paddle_collider_index].set_location(&right_paddle_location);
 
     let collisions = find_collisions(&colliders);
-    match collisions {
-      Some(collisions) => {
-        for collision in collisions {
-          if collision.primary_index() == ball_collider_index {
-            if collision.secondary_index() == left_barrier_collider_index {
-              ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
-              ball_velocity.x *= -1.0;
-            }
-            
-            if collision.secondary_index() == right_barrier_collider_index {
-              ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
-              ball_velocity.x *= -1.0;
-            }
-            
-            if collision.secondary_index() == top_barrier_collider_index {
-              ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
-              ball_velocity.y *= -1.0;
-            }
-            
-            if collision.secondary_index() == bottom_barrier_collider_index {
-              ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
-              ball_velocity.y *= -1.0;
-            }
+    if let Some(collisions) = collisions {
+      for collision in collisions {
+        if collision.primary_index() == ball_collider_index {
+          if collision.secondary_index() == left_barrier_collider_index {
+            ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
+            ball_velocity.x *= -1.0;
+          }
+          
+          if collision.secondary_index() == right_barrier_collider_index {
+            ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
+            ball_velocity.x *= -1.0;
+          }
+          
+          if collision.secondary_index() == top_barrier_collider_index {
+            ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
+            ball_velocity.y *= -1.0;
+          }
+          
+          if collision.secondary_index() == bottom_barrier_collider_index {
+            ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
+            ball_velocity.y *= -1.0;
+          }
 
-            if collision.secondary_index() == left_paddle_collider_index {
-              match collision.entry_direction() {
-                CollisionDirection::Left => {
-                  ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
-                  ball_velocity.x *= -1.0;
-                },
+          if collision.secondary_index() == left_paddle_collider_index {
+            match collision.entry_direction() {
+              CollisionDirection::Left => {
+                ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
+                ball_velocity.x *= -1.0;
+              },
 
-                CollisionDirection::Right => {
-                  ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
+              CollisionDirection::Right => {
+                ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
 
-                  let signed_offset = left_paddle_location.y() - ball_location.y();
-                  let unsigned_offset = if signed_offset > 0.0 { signed_offset } else { signed_offset * -1.0 };
-                  let ratio = unsigned_offset / 64.0;
+                let signed_offset = left_paddle_location.y() - ball_location.y();
+                let unsigned_offset = if signed_offset > 0.0 { signed_offset } else { signed_offset * -1.0 };
+                let ratio = unsigned_offset / 64.0;
 
-                  let final_y = ratio / 2.0;
-                  let final_x = 0.5 - final_y;
+                let final_y = ratio / 2.0;
+                let final_x = 0.5 - final_y;
 
-                  ball_velocity.x = final_x;
-                  ball_velocity.y = if signed_offset > 0.0 { final_y * -1.0 } else { final_y };
-                },
+                ball_velocity.x = final_x;
+                ball_velocity.y = if signed_offset > 0.0 { final_y * -1.0 } else { final_y };
+              },
 
-                CollisionDirection::Top => {
-                  ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
-                  ball_velocity.y *= -1.0;
-                  ball_velocity.x = 0.5;
-                },
+              CollisionDirection::Top => {
+                ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
+                ball_velocity.y *= -1.0;
+                ball_velocity.x = 0.5;
+              },
 
-                CollisionDirection::Bottom => {
-                  ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
-                  ball_velocity.y *= -1.0;
-                  ball_velocity.x = 0.5;
-                }
-              }
-            }
-  
-            if collision.secondary_index() == right_paddle_collider_index {
-              match collision.entry_direction() {
-                CollisionDirection::Left => {
-                  ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
-                  ball_velocity.x *= -1.0;
-                },
-
-                CollisionDirection::Right => {
-                  ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
-                  ball_velocity.x *= -1.0;
-                },
-
-                CollisionDirection::Top => {
-                  ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
-                  ball_velocity.y *= -1.0;
-                },
-
-                CollisionDirection::Bottom => {
-                  ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
-                  ball_velocity.y *= -1.0;
-                }
+              CollisionDirection::Bottom => {
+                ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
+                ball_velocity.y *= -1.0;
+                ball_velocity.x = 0.5;
               }
             }
           }
 
-          if collision.primary_index() == left_paddle_collider_index {
-            if collision.secondary_index() == top_barrier_collider_index {
-              left_paddle_location.translate(Vector2::new(0.0, collision.penetration_depth()));
-            }
+          if collision.secondary_index() == right_paddle_collider_index {
+            match collision.entry_direction() {
+              CollisionDirection::Left => {
+                ball_location.translate(Vector2::new(-collision.penetration_depth(), 0.0));
+                ball_velocity.x *= -1.0;
+              },
 
-            if collision.secondary_index() == bottom_barrier_collider_index {
-              left_paddle_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
-            }
-          }
+              CollisionDirection::Right => {
+                ball_location.translate(Vector2::new(collision.penetration_depth(), 0.0));
+                ball_velocity.x *= -1.0;
+              },
 
-          if collision.primary_index() == right_paddle_collider_index {
-            if collision.secondary_index() == top_barrier_collider_index {
-              right_paddle_location.translate(Vector2::new(0.0, collision.penetration_depth()));
-            }
+              CollisionDirection::Top => {
+                ball_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
+                ball_velocity.y *= -1.0;
+              },
 
-            if collision.secondary_index() == bottom_barrier_collider_index {
-              right_paddle_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
+              CollisionDirection::Bottom => {
+                ball_location.translate(Vector2::new(0.0, collision.penetration_depth()));
+                ball_velocity.y *= -1.0;
+              }
             }
           }
         }
-      },
 
-      None => {}
+        if collision.primary_index() == left_paddle_collider_index {
+          if collision.secondary_index() == top_barrier_collider_index {
+            left_paddle_location.translate(Vector2::new(0.0, collision.penetration_depth()));
+          }
+
+          if collision.secondary_index() == bottom_barrier_collider_index {
+            left_paddle_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
+          }
+        }
+
+        if collision.primary_index() == right_paddle_collider_index {
+          if collision.secondary_index() == top_barrier_collider_index {
+            right_paddle_location.translate(Vector2::new(0.0, collision.penetration_depth()));
+          }
+
+          if collision.secondary_index() == bottom_barrier_collider_index {
+            right_paddle_location.translate(Vector2::new(0.0, -collision.penetration_depth()));
+          }
+        }
+      }
     }
 
     unsafe {
