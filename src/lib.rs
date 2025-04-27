@@ -1,4 +1,4 @@
-use std::{path::Path, time::Instant};
+use std::{ffi::CString, path::Path, time::Instant};
 use sdl2::{event::Event, keyboard::Keycode};
 
 mod math;
@@ -27,7 +27,7 @@ mod prelude {
   pub use crate::buffer_object::BufferObject;
   pub use crate::vertex_array::VertexArray;
   pub use crate::shader::Shader;
-  pub use crate::shader_program::ShaderProgram;
+  pub use crate::shader_program::{ShaderProgram, set_model_matrix, set_view_matrix, set_projection_matrix};
   pub use crate::texture::Texture;
   pub use crate::sprite::Sprite;
   pub use crate::location::Location;
@@ -43,6 +43,9 @@ use prelude::{
   WINDOW_HEIGHT,
   find_collisions,
   limit_frame_rate,
+  set_model_matrix,
+  set_view_matrix,
+  set_projection_matrix,
   Collider,
   CollisionDirection,
   Location,
@@ -84,7 +87,6 @@ pub fn launch() -> Result<(), String> {
     ]
   );
   
-  //  let power_up_location = Location::new(WINDOW_WIDTH as f32 / 4.0, WINDOW_HEIGHT as f32 / 4.0);
   let mut power_up_locations = vec![
     Location::new(WINDOW_WIDTH as f32 / 4.0, (WINDOW_HEIGHT as f32 / 4.0) * 3.0),
     Location::new((WINDOW_WIDTH as f32 / 4.0) * 3.0, (WINDOW_HEIGHT as f32 / 4.0) * 3.0),
@@ -108,9 +110,9 @@ pub fn launch() -> Result<(), String> {
     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
   }
 
-  shader_program.set_view_matrix(&view_matrix)?;
-  shader_program.set_projection_matrix(&projection_matrix)?;
-  
+  set_view_matrix(&shader_program, &view_matrix)?;
+  set_projection_matrix(&shader_program, &projection_matrix)?;
+
   let ball_speed = 0.5;
   let mut ball_velocity = Vector2::new(0.5, 0.5);
   let mut left_paddle_velocity = Vector2::new(0.0, 0.0);
@@ -331,18 +333,17 @@ pub fn launch() -> Result<(), String> {
     }
 
     for power_up_location in &power_up_locations {
-      shader_program.set_model_matrix(power_up_location.matrix())?;
+      set_model_matrix(&shader_program, &power_up_location.matrix())?;
       power_up_sprite.render();
     }
 
-
-    shader_program.set_model_matrix(ball_location.matrix())?;
+    set_model_matrix(&shader_program, &ball_location.matrix())?;
     ball_sprite.render();
     
-    shader_program.set_model_matrix(left_paddle_location.matrix())?;
+    set_model_matrix(&shader_program, &left_paddle_location.matrix())?;
     paddle_sprite.render();
     
-    shader_program.set_model_matrix(right_paddle_location.matrix())?;
+    set_model_matrix(&shader_program, &right_paddle_location.matrix())?;
     paddle_sprite.render();
 
     window.gl_swap_window();
