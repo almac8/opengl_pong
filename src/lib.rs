@@ -1,4 +1,4 @@
-use std::{ffi::CString, path::Path, time::Instant};
+use std::{path::Path, time::Instant};
 use sdl2::{event::Event, keyboard::Keycode};
 
 mod math;
@@ -8,13 +8,13 @@ mod vertex_array;
 mod shader;
 mod shader_program;
 mod texture;
-mod sprite;
 mod location;
 mod collider;
 mod collision;
 mod collision_direction;
 mod collision_system;
 mod frame_limiter;
+mod quad;
 
 mod prelude {
   pub const WINDOW_WIDTH: u32 = 800;
@@ -29,31 +29,33 @@ mod prelude {
   pub use crate::shader::Shader;
   pub use crate::shader_program::{ShaderProgram, set_model_matrix, set_view_matrix, set_projection_matrix};
   pub use crate::texture::Texture;
-  pub use crate::sprite::Sprite;
   pub use crate::location::Location;
   pub use crate::collider::Collider;
   pub use crate::collision::Collision;
   pub use crate::collision_direction::CollisionDirection;
   pub use crate::collision_system::find_collisions;
   pub use crate::frame_limiter::limit_frame_rate;
+  pub use crate::quad::{Quad, render_textured_quad};
 }
 
 use prelude::{
-  WINDOW_WIDTH,
-  WINDOW_HEIGHT,
   find_collisions,
   limit_frame_rate,
   set_model_matrix,
-  set_view_matrix,
   set_projection_matrix,
+  set_view_matrix,
   Collider,
   CollisionDirection,
   Location,
+  Matrix4,
   Shader,
   ShaderProgram,
-  Sprite,
   Vector2,
-  Matrix4
+  Texture,
+  Quad,
+  render_textured_quad,
+  WINDOW_HEIGHT,
+  WINDOW_WIDTH
 };
 
 pub fn launch() -> Result<(), String> {
@@ -75,10 +77,13 @@ pub fn launch() -> Result<(), String> {
   gl::load_with(|procname| video_subsystem.gl_get_proc_address(procname) as *const gl::types::GLvoid);
 
   let mut is_running = true;
+  
+  let ball_quad = Quad::textured(16, 16);
+  let paddle_quad = Quad::textured(16, 128);
 
-  let power_up_sprite = Sprite::new(Path::new("res/textures/power_up.png"), 16, 16)?;
-  let ball_sprite = Sprite::new(Path::new("res/textures/ball.png"), 16, 16)?;
-  let paddle_sprite = Sprite::new(Path::new("res/textures/paddle.png"), 16, 128)?;
+  let ball_texture = Texture::load(Path::new("res/textures/ball.png"))?;
+  let paddle_texture = Texture::load(Path::new("res/textures/paddle.png"))?;
+  let power_up_texture = Texture::load(Path::new("res/textures/power_up.png"))?;
 
   let shader_program = ShaderProgram::link(
     vec![
@@ -334,17 +339,17 @@ pub fn launch() -> Result<(), String> {
 
     for power_up_location in &power_up_locations {
       set_model_matrix(&shader_program, &power_up_location.matrix())?;
-      power_up_sprite.render();
+      render_textured_quad(&ball_quad, &power_up_texture);
     }
 
     set_model_matrix(&shader_program, &ball_location.matrix())?;
-    ball_sprite.render();
+    render_textured_quad(&ball_quad, &ball_texture);
     
     set_model_matrix(&shader_program, &left_paddle_location.matrix())?;
-    paddle_sprite.render();
+    render_textured_quad(&paddle_quad, &paddle_texture);
     
     set_model_matrix(&shader_program, &right_paddle_location.matrix())?;
-    paddle_sprite.render();
+    render_textured_quad(&paddle_quad, &paddle_texture);
 
     window.gl_swap_window();
     
