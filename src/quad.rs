@@ -3,7 +3,7 @@ use crate::prelude::{
   BufferObject,
   Texture,
   generate_textured_vertex_data
-}
+};
 
 pub struct Quad {
   vertex_array: VertexArray

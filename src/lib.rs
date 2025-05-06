@@ -338,17 +338,17 @@ pub fn launch() -> Result<(), String> {
     }
 
     for power_up_location in &power_up_locations {
-      set_model_matrix(&shader_program, &power_up_location.matrix())?;
+      set_model_matrix(&shader_program, power_up_location.matrix())?;
       render_textured_quad(&ball_quad, &power_up_texture);
     }
 
-    set_model_matrix(&shader_program, &ball_location.matrix())?;
+    set_model_matrix(&shader_program, ball_location.matrix())?;
     render_textured_quad(&ball_quad, &ball_texture);
     
-    set_model_matrix(&shader_program, &left_paddle_location.matrix())?;
+    set_model_matrix(&shader_program, left_paddle_location.matrix())?;
     render_textured_quad(&paddle_quad, &paddle_texture);
     
-    set_model_matrix(&shader_program, &right_paddle_location.matrix())?;
+    set_model_matrix(&shader_program, right_paddle_location.matrix())?;
     render_textured_quad(&paddle_quad, &paddle_texture);
 
     window.gl_swap_window();
